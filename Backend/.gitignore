@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+
+# Environment variables
+.env
+
+# Config
+config/default.json
+config/production.json
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+
+# Coverage
+coverage
+
+# Compiled binary addons
+build/
+dist/
+
+# Misc
+.DS_Store
+.idea/
+.vscode/
+tmp/
+temp/
