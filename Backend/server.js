@@ -32,6 +32,7 @@ app.use(cors({
 
 // Define routes
 app.use('/api/auth', require('./routes/api/auth'));
+app.use('/api/organizations', require('./routes/api/organizations'));
 
 // Simple test route
 app.get('/', (req, res) => {
