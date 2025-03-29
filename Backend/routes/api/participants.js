@@ -48,6 +48,22 @@ router.put(
   participantController.updateParticipant
 );
 
+// @route   PUT /api/participants/:id/scores
+// @desc    Update participant scores
+// @access  Private (Only for pageant organizer)
+router.put(
+  '/:id/scores',
+  [
+    protect,
+    [
+      check('categoryScores', 'Category scores array is required').isArray(),
+      check('categoryScores.*.category', 'Category name is required').not().isEmpty(),
+      check('categoryScores.*.score', 'Score must be a number between 0 and 10').isFloat({ min: 0, max: 10 })
+    ]
+  ],
+  participantController.updateParticipantScores
+);
+
 // @route   DELETE /api/participants/:id
 // @desc    Delete participation (withdraw completely)
 // @access  Private

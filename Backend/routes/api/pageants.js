@@ -60,6 +60,25 @@ router.put(
   pageantController.updatePageant
 );
 
+// @route   PUT /api/pageants/:id/status
+// @desc    Update pageant status
+// @access  Private
+router.put(
+  '/:id/status',
+  [
+    protect,
+    [
+      check('status', 'Status is required').not().isEmpty()
+    ]
+  ],
+  pageantController.updatePageantStatus
+);
+
+// @route   GET /api/pageants/:id/scores
+// @desc    Get all participants' scores for a pageant
+// @access  Private
+router.get('/:id/scores', protect, pageantController.getPageantScores);
+
 // @route   DELETE /api/pageants/:id
 // @desc    Delete pageant
 // @access  Private
