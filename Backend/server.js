@@ -33,7 +33,8 @@ app.use(cors({
 // Define routes
 app.use('/api/auth', require('./routes/api/auth'));
 app.use('/api/organizations', require('./routes/api/organizations'));
-app.use('/api/pageants', require('./routes/api/pageants'));4
+app.use('/api/pageants', require('./routes/api/pageants'));
+app.use('/api/participants', require('./routes/api/participants'));
 
 // Simple test route
 app.get('/', (req, res) => {
