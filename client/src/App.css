@@ -1,42 +1,210 @@
-#root {
-  max-width: 1280px;
+:root{
+  /* Font Families */
+  --primary-family: "Frank Ruhl Libre", serif;
+  --secondary-family: "Roboto", sans-serif;
+
+  /* Colors */
+  --primary-color: white;
+  --secondary-color: #1C1C1C;
+  --brand-color: #D4AF37;
+
+  /* Background colors */
+  --primary-background: white;
+  --secondary-background: #1C1C1C;
+
+  /* Clamp sizes for responsivness */
+  /* Small Sizes */
+  --size--1rem: clamp(0.75rem, 0.6786rem + 0.3571vw, 1rem);
+  --size--1-25rem: clamp(1rem, 0.9286rem + 0.3571vw, 1.25rem);
+  --size--1-5rem: clamp(1.25rem, 1.1786rem + 0.3571vw, 1.5rem);
+  --size--2rem: clamp(1.75rem, 1.6786rem + 0.3571vw, 2rem);
+  --size--2-5rem: clamp(2rem, 1.8571rem + 0.7143vw, 2.5rem);
+  
+  /* Medium Sizes */
+  --size--3rem: clamp(2.25rem, 2.0357rem + 1.0714vw, 3rem);
+  --size--3-5rem: clamp(2.375rem, 2.0536rem + 1.6071vw, 3.5rem);
+  --size--4rem: clamp(2.5rem, 2.0714rem + 2.1429vw, 4rem);
+  --size--4-5rem: clamp(2.75rem, 2.25rem + 2.5vw, 4.5rem);
+  --size--5rem: clamp(3rem, 2.4286rem + 2.8571vw, 5rem);
+  --size--5-5rem: clamp(3.25rem, 2.6071rem + 3.2143vw, 5.5rem);
+  --size--6rem: clamp(3.5rem, 2.7857rem + 3.5714vw, 6rem);
+  --size--6-5rem: clamp(3.75rem, 2.9643rem + 3.9286vw, 6.5rem);
+  --size--7rem: clamp(4rem, 3.1429rem + 4.2857vw, 7rem);
+  --size--7-5rem: clamp(4.25rem, 3.3214rem + 4.6429vw, 7.5rem);
+  --size--8rem: clamp(4.5rem, 3.5rem + 5vw, 8rem);
+  --size--8-5rem: clamp(4.75rem, 3.6786rem + 5.3571vw, 8.5rem);
+  --size--9rem: clamp(5rem, 3.8571rem + 5.7143vw, 9rem);
+  --size--9-5rem: clamp(5.25rem, 4.0357rem + 6.0714vw, 9.5rem);
+  
+  /* Large Sizes */
+  --size--10rem: clamp(5.5rem, 4.2143rem + 6.4286vw, 10rem);
+  --size--11rem: clamp(5.75rem, 4.25rem + 7.5vw, 11rem);
+  --size--12rem: clamp(6rem, 4.2857rem + 8.5714vw, 12rem);
+  --size--13rem: clamp(6.5rem, 4.6429rem + 9.2857vw, 13rem);
+  --size--14rem: clamp(7rem, 5rem + 10vw, 14rem);
+  --size--15rem: clamp(7.5rem, 5.3571rem + 10.7143vw, 15rem);
+  --size--16rem: clamp(8rem, 5.7143rem + 11.4286vw, 16rem);
+
+}
+
+/* Default styles */
+a{
+  font-family: var(--secondary-family);
+  text-decoration: none;
+}
+
+img{
+  object-fit: cover;
+}
+
+h1{
+  color: var(--primary-color);
+  font-size: var(--size--5rem);
+  font-family: var(--primary-family);
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+p{
+  color: var(--primary-color);
+  font-size: var(--size--1-25rem);
+  font-family: var(--secondary-family);
+  font-weight: 400;
+}
+
+/* For Grid */
+.guide-wrap{
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 100;
+}
+
+.guide-content{
   margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  padding: 0 var(--size--2rem);
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+.u-grid-custom{
+  gap: var(--size--1rem);
+  justify-content: stretch;
+  align-content: stretch;
+  grid-template-columns: repeat(12, minmax(0, 1fr));;
+  display: grid;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.guide-column{
+  background-color: rgba(146, 146, 146, 0.1);
+  height: 100vh;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+/* Utility classes */
+
+/* Container */
+.u-container{
+  max-width: 90rem;
+  width: 100%;
+  margin: 0 auto;
+  position: relative;
+  padding: 0 var(--size--2rem);
 }
 
-.card {
-  padding: 2em;
+/* Font colors */
+.u-text-dark{
+  color: var(--secondary-color);
 }
 
-.read-the-docs {
-  color: #888;
+.u-text-light{
+  color: var(--primary-color);
+}
+
+/* Font sizes */
+.u-text-xs{
+  font-size: var(--size--1rem);
+}
+
+.u-text-s{
+  font-size: var(--size--1-25rem);
+}
+
+.u-text-m{
+
+}
+
+.u-text-l{
+
+}
+
+.u-text-xl{
+
+}
+
+/* Font Weights */
+.u-weight-regular{
+  font-weight: 400;
+}
+
+.u-weight-semi{
+  font-weight: 500;
+}
+
+.u-weight-bold{
+  font-weight: 700;
+}
+
+/* Gap Sizes */
+.u-gap-s{
+  gap: var(--size--1rem);
+}
+
+.u-gap-m{
+  gap: var(--size--2rem);
+}
+
+.u-gap-l{
+  gap: var(--size-3rem);
+}
+
+/* navbar */
+.navbar-wrap{
+  padding: var(--size--2-5rem) 0;
+  z-index: 99;
+}
+.navbar-links{
+  gap: var(--size--5rem);
+}
+
+/* Home page hero */
+.hero-contain{
+  padding-top: var(--size--7rem);
+}
+
+.hero-layout h1{
+  max-width: 10em;
+}
+
+.hero-layout p{
+  max-width: 34em;
+}
+
+/* Button */
+.button-wrap{
+  padding: var(--size--1rem) var(--size--2rem);
+  font-size: var(--size--1-25rem);
+  font-family: var(--secondary-family);
+  font-weight: 700;
+  width: fit-content;
+  text-transform: uppercase;
+}
+
+.button-light{
+  background-color: var(--primary-background);
+  color: var(--secondary-color);
+  border: 2px solid var(--secondary-color);
+}
+
+.button-dark{
+  background-color: var(--secondary-background);
+  color: var(--primary-color);
+  border: 2px solid var(--primary-color);
 }
