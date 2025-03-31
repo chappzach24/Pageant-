@@ -1,5 +1,6 @@
 const Pageant = require('../models/Pageant');
 const Organization = require('../models/Organization');
+const Participant = require('../models/Participant');
 const { validationResult } = require('express-validator');
 
 // @route   POST /api/pageants
@@ -308,6 +309,136 @@ exports.deletePageant = async (req, res) => {
         error: 'Pageant not found'
       });
     }
+    res.status(500).json({
+      success: false,
+      error: 'Server error'
+    });
+  }
+};
+
+// @route   PUT /api/pageants/:id/status
+// @desc    Update pageant status
+// @access  Private
+exports.updatePageantStatus = async (req, res) => {
+  try {
+    const { status } = req.body;
+
+    if (!status) {
+      return res.status(400).json({
+        success: false,
+        error: 'Status is required'
+      });
+    }
+
+    // Check valid status
+    const validStatuses = ['draft', 'published', 'registration-closed', 'in-progress', 'completed', 'cancelled'];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        error: `Status must be one of: ${validStatuses.join(', ')}`
+      });
+    }
+
+    const pageant = await Pageant.findById(req.params.id);
+
+    if (!pageant) {
+      return res.status(404).json({
+        success: false,
+        error: 'Pageant not found'
+      });
+    }
+
+    // Check if user owns the organization
+    const org = await Organization.findById(pageant.organization);
+    if (!org) {
+      return res.status(404).json({
+        success: false,
+        error: 'Organization not found'
+      });
+    }
+
+    if (org.owner.toString() !== req.user.id) {
+      return res.status(401).json({
+        success: false,
+        error: 'Not authorized to update this pageant'
+      });
+    }
+
+    // Update status
+    pageant.status = status;
+    await pageant.save();
+
+    res.json({
+      success: true,
+      pageant: {
+        _id: pageant._id,
+        name: pageant.name,
+        status: pageant.status,
+        registrationOpen: pageant.registrationOpen
+      }
+    });
+  } catch (error) {
+    console.error('Update pageant status error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Server error'
+    });
+  }
+};
+
+// @route   GET /api/pageants/:id/scores
+// @desc    Get all participants' scores for a pageant
+// @access  Private (Organization owner only)
+exports.getPageantScores = async (req, res) => {
+  try {
+    const pageant = await Pageant.findById(req.params.id)
+      .populate('organization', 'owner name');
+    
+    if (!pageant) {
+      return res.status(404).json({
+        success: false,
+        error: 'Pageant not found'
+      });
+    }
+    
+    // Check if user is authorized (pageant organizer)
+    if (pageant.organization.owner.toString() !== req.user.id) {
+      return res.status(401).json({
+        success: false,
+        error: 'Not authorized to view this pageant\'s scores'
+      });
+    }
+    
+    // Get all participants with their scores
+    const participants = await Participant.find({ pageant: req.params.id })
+      .populate('user', 'username firstName lastName')
+      .sort({ ageGroup: 1 }); // Sort by age group
+    
+    // Organize participants by age group
+    const scoresByAgeGroup = {};
+    
+    pageant.ageGroups.forEach(ageGroup => {
+      scoresByAgeGroup[ageGroup] = participants
+        .filter(p => p.ageGroup === ageGroup)
+        .map(p => ({
+          participantId: p._id,
+          user: p.user,
+          categories: p.categories
+        }));
+    });
+    
+    res.json({
+      success: true,
+      pageant: {
+        id: pageant._id,
+        name: pageant.name,
+        organization: pageant.organization.name
+      },
+
+      scoresByAgeGroup
+    });
+  } catch (error) {
+    console.error('Get pageant scores error:', error);
     res.status(500).json({
       success: false,
       error: 'Server error'
