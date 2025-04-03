@@ -4,6 +4,7 @@ import Button from "../components/global/Button";
 import BenefitsSection from "../components/sections/BenefitsSection";
 import StepsSection from "../components/sections/StepsSection";
 import FAQSection from "../components/sections/FAQSection";
+import CTASection from "../components/sections/CTASection";
 
 const Home = () => {
 
@@ -18,9 +19,13 @@ const Home = () => {
                 </div>
                 <div className="hero-contain u-container d-flex flex-column justify-content-center h-100">
                     <div className="hero-layout d-flex flex-column u-gap-m">
-                        <h1>Run Your Pageant With Confidence</h1>
-                        <p>No more judging delays or messy spreadsheets. Get real-time scoring, seamless contestant management, and stress-free results—all in one place.</p>
-                        <Button text="Simplify My Pageant" mode="light" />
+                        <div className="hero-header d-flex flex-column u-gap-xs">
+                            <h1>Run Your Pageant With Confidence</h1>
+                            <p>No more judging delays or messy spreadsheets. Get real-time scoring, seamless contestant management, and stress-free results—all in one place.</p>
+                        </div>
+                        <div className="button-contain">
+                            <Button text="Simplify My Pageant" mode="light" />
+                        </div>
                     </div>
                 </div>
             </div>
@@ -33,6 +38,9 @@ const Home = () => {
 
             {/* FAQ Section */}
             <FAQSection />
+
+            {/* CTA Section */}
+            <CTASection />
         </>
     )
 }
