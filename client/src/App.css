@@ -255,7 +255,14 @@ p{
 .navbar-wrap{
   padding: var(--size--2-5rem) 0;
   z-index: 99;
+  background: transparent;
+  transition: background 0.3s ease-in-out;
 }
+
+.navbar-wrap.scrolled{
+  background: rgba(28, 28, 28, 0.6);
+}
+
 .navbar-links{
   gap: var(--size--5rem);
 }
@@ -281,7 +288,7 @@ p{
 .benefits-grid{
   display: grid;
   grid-template-columns: repeat(12, 1fr); /* 12 equal columns */
-  gap: var(--size--2-5rem);
+  gap: var(--size--1rem);
   
 }
 
@@ -360,6 +367,35 @@ p{
   transition: background-color 0.3s ease-in-out;
 }
 
+@media (max-width: 55em){
+  .step-item.right{
+    justify-content: flex-start;
+  }
+  .step-progress{
+    left: 85%;
+    transform: translate(-85%, -50%);
+  }
+}
+
+@media (max-width: 32em){
+  .step-item{
+    padding: 0;
+  }
+  .step-progress{
+    left: 100%;
+    transform: translate(-100%, -50%);
+  }
+}
+
+@media (max-width: 32em){
+  .step-description h5{
+    max-width: 8em
+  }
+  .step-description p{
+    max-width: 14em
+  }
+}
+
 /* FAQ Section */
 .faq-header h2{
   max-width: 11em;
@@ -394,6 +430,7 @@ p{
   padding: var(--size--0-5rem);
   margin: auto 0 auto auto;
   grid-column: 11/ span 1;
+  cursor: pointer;
 }
 
 .faq-answer {
