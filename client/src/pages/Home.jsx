@@ -3,6 +3,7 @@ import GridGuide from "../components/GridGuide";
 import Button from "../components/global/Button";
 import BenefitsSection from "../components/sections/BenefitsSection";
 import StepsSection from "../components/sections/StepsSection";
+import FAQSection from "../components/sections/FAQSection";
 
 const Home = () => {
 
@@ -29,6 +30,9 @@ const Home = () => {
 
             {/* Steps Section */}
             <StepsSection />
+
+            {/* FAQ Section */}
+            <FAQSection />
         </>
     )
 }
