@@ -175,15 +175,15 @@ p{
 }
 
 .u-text-m{
-
+  font-size: var(--size--2rem);
 }
 
 .u-text-l{
-
+  font-size: var(--size--3rem);
 }
 
 .u-text-xl{
-
+  font-size: var(--size--5rem);
 }
 
 /* Font Weights */
@@ -412,4 +412,59 @@ p{
   grid-column: 2 / span 10;
   border-bottom: 2px solid var(--primary-color);
   height: 0;
+}
+
+/* Footer */
+.footer-grid{
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: var(--size--1rem);
+}
+
+.footer-logo{
+  grid-column: 1/ span 7;
+}
+
+.footer-content{
+  grid-column: 8 / span 5;
+}
+
+.footer-link{
+  font-size: var(--size--1-25rem);
+}
+
+@media (max-width: 64em){
+  .footer-logo{
+    grid-column: 1/ span 6;
+  }
+  
+  .footer-content{
+    grid-column: 7 / span 6;
+  }
+}
+
+@media (max-width: 52em){
+  .footer-grid{
+    grid-auto-flow: row;
+  }
+  .footer-logo{
+    grid-column: 1/ span 12;
+  }
+  
+  .footer-content{
+    grid-column: 1 / span 12;
+    margin-top: var(--size--1rem);
+  }
+}
+
+@media (max-width: 30em){
+  .footer-top-nav{
+    flex-direction: column !important;
+    align-items: start;
+    text-align: start;
+  }
+  .footer-additional-info{
+    flex-direction: column !important;
+    gap: var(--size--1-5rem);
+  }
 }

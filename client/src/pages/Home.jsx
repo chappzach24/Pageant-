@@ -5,6 +5,7 @@ import BenefitsSection from "../components/sections/BenefitsSection";
 import StepsSection from "../components/sections/StepsSection";
 import FAQSection from "../components/sections/FAQSection";
 import CTASection from "../components/sections/CTASection";
+import Footer from "../components/sections/Footer";
 
 const Home = () => {
 
@@ -41,6 +42,9 @@ const Home = () => {
 
             {/* CTA Section */}
             <CTASection />
+
+            {/* Footer */}
+            <Footer />
         </>
     )
 }
