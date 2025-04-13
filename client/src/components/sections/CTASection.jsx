@@ -23,6 +23,7 @@ const CTASection = () => {
                         <Button
                             text="Get started today"
                             mode="light"
+                            to="/login"
                         />
                     </div>
                 </div>

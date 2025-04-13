@@ -25,7 +25,7 @@ const Home = () => {
                             <p>No more judging delays or messy spreadsheets. Get real-time scoring, seamless contestant management, and stress-free results—all in one place.</p>
                         </div>
                         <div className="button-contain">
-                            <Button text="Simplify My Pageant" mode="light" />
+                            <Button text="Simplify My Pageant" mode="light" to="/login" />
                         </div>
                     </div>
                 </div>
