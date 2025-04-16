@@ -1,5 +1,5 @@
 // client/src/components/dashboard/ContestantSidebar.jsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
@@ -15,11 +15,18 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '../../context/AuthContext';
 
-const ContestantSidebar = () => {
+const ContestantSidebar = ({ onToggle }) => {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const { user, logout } = useAuth();
+
+  useEffect(() => {
+    // Report collapsed state to parent component
+    if (onToggle) {
+      onToggle(collapsed);
+    }
+  }, [collapsed, onToggle]);
 
   const handleLogout = async () => {
     try {

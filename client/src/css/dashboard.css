@@ -4,6 +4,7 @@
 .contestant-dashboard-container {
     min-height: 100vh;
     background-color: #f8f9fa;
+    position: relative;
   }
   
   /* Sidebar Styles */
@@ -12,6 +13,12 @@
     min-height: 100vh;
     box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
     z-index: 1040;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 250px;
+    transition: width 0.3s ease;
   }
   
   .sidebar.collapsed {
@@ -71,6 +78,12 @@
   }
   
   /* Dashboard Content */
+  .dashboard-content-wrapper {
+    transition: margin-left 0.3s ease, width 0.3s ease;
+    padding: 20px;
+    min-height: 100vh;
+  }
+  
   .dashboard-content {
     padding: 1.5rem;
     border-radius: 0.5rem;

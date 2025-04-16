@@ -16,6 +16,7 @@ import { AuthProvider } from './context/AuthContext';
 // Dashboard Components
 import ContestantDashboardLayout from './components/dashboard/ContestantDashboardLayout.jsx';
 import ContestantDashboardHome from './pages/dashboard/ContestantDashboardHome.jsx';
+import ContestantProfile from './pages/dashboard/ContestantProfile.jsx';
 
 const router = createBrowserRouter([
   {
@@ -54,6 +55,10 @@ const router = createBrowserRouter([
           {
             index: true,
             element: <ContestantDashboardHome />
+          },
+          {
+            path: 'profile',
+            element: <ContestantProfile />
           }
           // Additional dashboard routes will be added here
         ]
