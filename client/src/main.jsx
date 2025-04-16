@@ -9,7 +9,13 @@ import Home from './pages/Home.jsx';
 import Login from './pages/Login.jsx';
 import Signup from './pages/Signup.jsx';
 import Dashboard from './pages/Dashboard.jsx';
+import ContestantSignup from './pages/ContestantSignup.jsx';
+import ContestantLogin from './pages/ContestantLogin.jsx';
 import { AuthProvider } from './context/AuthContext';
+
+// Dashboard Components
+import ContestantDashboardLayout from './components/dashboard/ContestantDashboardLayout.jsx';
+import ContestantDashboardHome from './pages/dashboard/ContestantDashboardHome.jsx';
 
 const router = createBrowserRouter([
   {
@@ -31,6 +37,26 @@ const router = createBrowserRouter([
       {
         path: 'dashboard',
         element: <Dashboard />
+      },
+      {
+        path: 'contestant-signup',
+        element: <ContestantSignup />
+      },
+      {
+        path: 'contestant-login',
+        element: <ContestantLogin />
+      },
+      // Contestant Dashboard Routes
+      {
+        path: 'contestant-dashboard',
+        element: <ContestantDashboardLayout />,
+        children: [
+          {
+            index: true,
+            element: <ContestantDashboardHome />
+          }
+          // Additional dashboard routes will be added here
+        ]
       }
     ]
   }

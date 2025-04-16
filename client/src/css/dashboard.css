@@ -1,0 +1,111 @@
+/* client/src/styles/dashboard.css */
+
+/* Dashboard Layout */
+.contestant-dashboard-container {
+    min-height: 100vh;
+    background-color: #f8f9fa;
+  }
+  
+  /* Sidebar Styles */
+  .sidebar {
+    background-color: var(--secondary-color);
+    min-height: 100vh;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    z-index: 1040;
+  }
+  
+  .sidebar.collapsed {
+    width: 80px;
+  }
+  
+  .nav-link {
+    color: var(--primary-color);
+    transition: all 0.3s ease;
+    border-left: 4px solid transparent;
+    padding: 0.75rem 1rem;
+    margin: 0.25rem 0;
+  }
+  
+  .nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: var(--brand-color);
+  }
+  
+  .nav-link.active {
+    border-left: 4px solid var(--brand-color);
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--brand-color);
+  }
+  
+  /* Mobile Sidebar */
+  @media (max-width: 767.98px) {
+    .sidebar {
+      transform: translateX(-100%);
+      position: fixed;
+      width: 250px !important;
+      transition: transform 0.3s ease-in-out;
+    }
+    
+    .sidebar.mobile-open {
+      transform: translateX(0);
+    }
+    
+    .dashboard-content-wrapper {
+      margin-left: 0 !important;
+      width: 100% !important;
+    }
+    
+    .mobile-toggle {
+      display: block;
+    }
+  }
+  
+  @media (min-width: 768px) {
+    .mobile-toggle {
+      display: none;
+    }
+    
+    .sidebar {
+      transform: translateX(0) !important;
+    }
+  }
+  
+  /* Dashboard Content */
+  .dashboard-content {
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    background-color: #fff;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    min-height: calc(100vh - 40px);
+  }
+  
+  /* Stat Cards */
+  .stat-icon {
+    color: var(--brand-color);
+    background-color: rgba(212, 175, 55, 0.1);
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+  }
+  
+  /* Badge Styles */
+  .badge.bg-success {
+    background-color: #28a745 !important;
+  }
+  
+  .badge.bg-warning {
+    background-color: #ffc107 !important;
+    color: #212529 !important;
+  }
+  
+  /* Transitions */
+  .sidebar, 
+  .dashboard-content-wrapper,
+  .nav-link,
+  .btn {
+    transition: all 0.3s ease-in-out;
+  }

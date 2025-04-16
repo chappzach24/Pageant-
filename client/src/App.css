@@ -7,6 +7,7 @@
   --primary-color: white;
   --secondary-color: #1C1C1C;
   --brand-color: #D4AF37;
+  --alert-color: #DC2626;
 
   /* Background colors */
   --primary-background: white;
@@ -154,6 +155,10 @@ p{
 
 .u-text-brand{
   color: var(--brand-color);
+}
+
+.u-text-red{
+  color: var(--alert-color);
 }
 
 /* Background Color */
