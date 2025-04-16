@@ -11,14 +11,18 @@ import {
   faImage,
   faEdit,
   faSave,
-  faTimes
+  faTimes,
+  faCheck,
+  faExclamationTriangle
 } from '@fortawesome/free-solid-svg-icons';
+import { getContestantProfile, updateContestantProfile, getProfileCompleteness } from '../../services/profileService';
 import '../../css/contestantProfile.css';
 
 const ContestantProfile = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('basic');
   const [loading, setLoading] = useState(true);
+  const [updating, setUpdating] = useState(false);
   const [profileData, setProfileData] = useState({
     // Basic info (from registration)
     firstName: '',
@@ -34,47 +38,77 @@ const ContestantProfile = () => {
     // Emergency contact
     emergencyContactName: '',
     emergencyContactPhone: '',
+    emergencyContactRelationship: '',
     // Medical info
     allergies: '',
     medicalConditions: '',
     // Proof of age
-    proofOfAge: null,
     proofOfAgeType: 'birth-certificate', // or 'id'
+    proofOfAgeFile: null
   });
+  const [originalData, setOriginalData] = useState({});
   const [isEditing, setIsEditing] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [completeness, setCompleteness] = useState(0);
 
   useEffect(() => {
     // Fetch contestant profile data
     const fetchProfileData = async () => {
       try {
-        // In a real app, you'd fetch this from your API
-        // For now, we'll use the user data from auth context and mock the rest
-        if (user) {
-          setProfileData(prevData => ({
-            ...prevData,
-            firstName: user.firstName || '',
-            lastName: user.lastName || '',
-            email: user.email || '',
-            username: user.username || '',
-            dateOfBirth: user.dateOfBirth ? new Date(user.dateOfBirth).toISOString().split('T')[0] : '',
-          }));
-        }
+        setLoading(true);
+        const response = await getContestantProfile();
         
-        // Mock API call for additional profile data
-        // In a real app, you would fetch this data from your backend
-        setTimeout(() => {
-          setLoading(false);
-        }, 500);
+        if (response.success) {
+          const { user: userData, profile } = response.contestant;
+          
+          // Prepare profile data object
+          const newProfileData = {
+            // Basic info from user
+            firstName: userData.firstName || '',
+            lastName: userData.lastName || '',
+            email: userData.email || '',
+            username: userData.username || '',
+            dateOfBirth: userData.dateOfBirth ? new Date(userData.dateOfBirth).toISOString().split('T')[0] : '',
+            
+            // Profile info
+            biography: profile?.biography || '',
+            funFact: profile?.funFact || '',
+            hairColor: profile?.appearance?.hairColor || '',
+            eyeColor: profile?.appearance?.eyeColor || '',
+            
+            // Emergency contact
+            emergencyContactName: profile?.emergencyContact?.name || '',
+            emergencyContactPhone: profile?.emergencyContact?.phone || '',
+            emergencyContactRelationship: profile?.emergencyContact?.relationship || '',
+            
+            // Medical info
+            allergies: profile?.medicalInformation?.allergies || '',
+            medicalConditions: profile?.medicalInformation?.medicalConditions || '',
+            
+            // Document info
+            proofOfAgeType: profile?.documents?.proofOfAgeType || 'birth-certificate',
+            proofOfAgeFile: profile?.documents?.proofOfAgeFile || null
+          };
+          
+          // Set profile data and keep a copy for tracking changes
+          setProfileData(newProfileData);
+          setOriginalData(newProfileData);
+          
+          // Set completeness
+          setCompleteness(profile?.profileCompleteness || 0);
+        }
       } catch (error) {
-        console.error('Error fetching profile data:', error);
+        console.error('Error fetching profile:', error);
         setErrorMessage('Failed to load profile data. Please try again later.');
+      } finally {
         setLoading(false);
       }
     };
 
-    fetchProfileData();
+    if (user) {
+      fetchProfileData();
+    }
   }, [user]);
 
   const handleInputChange = (e) => {
@@ -85,37 +119,54 @@ const ContestantProfile = () => {
     }));
   };
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setProfileData(prevData => ({
-        ...prevData,
-        proofOfAge: file
-      }));
-    }
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
+    setUpdating(true);
     setSuccessMessage('');
     setErrorMessage('');
 
     try {
-      // In a real app, you'd send this data to your API
-      console.log('Profile data to submit:', profileData);
+      // Prepare data for API
+      const updateData = {
+        biography: profileData.biography,
+        funFact: profileData.funFact,
+        hairColor: profileData.hairColor,
+        eyeColor: profileData.eyeColor,
+        emergencyContactName: profileData.emergencyContactName,
+        emergencyContactPhone: profileData.emergencyContactPhone,
+        emergencyContactRelationship: profileData.emergencyContactRelationship,
+        allergies: profileData.allergies,
+        medicalConditions: profileData.medicalConditions,
+        proofOfAgeType: profileData.proofOfAgeType
+      };
 
-      // Mock API call
-      setTimeout(() => {
+      const response = await updateContestantProfile(updateData);
+      
+      if (response.success) {
         setSuccessMessage('Profile updated successfully!');
         setIsEditing(false);
-        setLoading(false);
-      }, 1000);
+        
+        // Update completeness
+        const completenessResponse = await getProfileCompleteness();
+        if (completenessResponse.success) {
+          setCompleteness(completenessResponse.completeness);
+        }
+        
+        // Update original data reference to reflect the saved changes
+        setOriginalData({...profileData});
+      }
     } catch (error) {
       console.error('Error updating profile:', error);
-      setErrorMessage('Failed to update profile. Please try again.');
-      setLoading(false);
+      setErrorMessage('Failed to update profile. ' + error.message);
+    } finally {
+      setUpdating(false);
     }
+  };
+
+  const cancelEditing = () => {
+    // Revert changes by restoring from original data
+    setProfileData({...originalData});
+    setIsEditing(false);
   };
 
   const formatDate = (dateString) => {
@@ -153,12 +204,44 @@ const ContestantProfile = () => {
           ) : (
             <button 
               className="btn btn-secondary ms-2"
-              onClick={() => setIsEditing(false)}
+              onClick={cancelEditing}
             >
               <FontAwesomeIcon icon={faTimes} className="me-2" />
               Cancel
             </button>
           )}
+        </div>
+      </div>
+
+      {/* Profile Completeness */}
+      <div className="card mb-4">
+        <div className="card-body">
+          <h5 className="card-title">Profile Completeness</h5>
+          <div className="progress">
+            <div 
+              className={`progress-bar ${completeness < 50 ? 'bg-danger' : completeness < 80 ? 'bg-warning' : 'bg-success'}`}
+              role="progressbar" 
+              style={{ width: `${completeness}%` }} 
+              aria-valuenow={completeness} 
+              aria-valuemin="0" 
+              aria-valuemax="100"
+            >
+              {completeness}%
+            </div>
+          </div>
+          <div className="mt-2 d-flex align-items-center">
+            {completeness < 100 ? (
+              <>
+                <FontAwesomeIcon icon={faExclamationTriangle} className="text-warning me-2" />
+                <small className="text-muted">Complete your profile to join pageants.</small>
+              </>
+            ) : (
+              <>
+                <FontAwesomeIcon icon={faCheck} className="text-success me-2" />
+                <small className="text-muted">Profile is complete! You're all set for pageants.</small>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
@@ -449,6 +532,24 @@ const ContestantProfile = () => {
                   </p>
                 )}
               </div>
+
+              <div className="mb-3">
+                <label className="form-label">Relationship</label>
+                {isEditing ? (
+                  <input
+                    type="text"
+                    className="form-control"
+                    name="emergencyContactRelationship"
+                    value={profileData.emergencyContactRelationship}
+                    onChange={handleInputChange}
+                    placeholder="E.g., Parent, Guardian, Spouse, Sibling"
+                  />
+                ) : (
+                  <p className="form-control-plaintext">
+                    {profileData.emergencyContactRelationship || 'Not provided'}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -503,7 +604,7 @@ const ContestantProfile = () => {
           </div>
         </div>
 
-        {/* Documents */}
+        {/* Documents - We'll implement this section later */}
         <div className={`tab-pane ${activeTab === 'documents' ? 'd-block' : 'd-none'}`}>
           <div className="card">
             <div className="card-body">
@@ -511,7 +612,7 @@ const ContestantProfile = () => {
               
               <div className="alert alert-warning" role="alert">
                 <FontAwesomeIcon icon={faInfoCircle} className="me-2" />
-                Please upload a copy of your birth certificate or government ID to verify your age. This is required for pageant eligibility.
+                Document upload functionality will be implemented soon. Please check back later.
               </div>
               
               <div className="mb-3">
@@ -525,41 +626,22 @@ const ContestantProfile = () => {
                   >
                     <option value="birth-certificate">Birth Certificate</option>
                     <option value="id">Government ID</option>
+                    <option value="passport">Passport</option>
+                    <option value="other">Other</option>
                   </select>
                 ) : (
                   <p className="form-control-plaintext">
-                    {profileData.proofOfAgeType === 'birth-certificate' ? 'Birth Certificate' : 'Government ID'}
+                    {profileData.proofOfAgeType === 'birth-certificate' ? 'Birth Certificate' : 
+                     profileData.proofOfAgeType === 'id' ? 'Government ID' : 
+                     profileData.proofOfAgeType === 'passport' ? 'Passport' : 'Other'}
                   </p>
                 )}
               </div>
 
               <div className="mb-3">
-                <label className="form-label">Upload Document</label>
-                {isEditing ? (
-                  <input
-                    type="file"
-                    className="form-control"
-                    accept=".jpg,.jpeg,.png,.pdf"
-                    onChange={handleFileChange}
-                  />
-                ) : (
-                  <div>
-                    {profileData.proofOfAge ? (
-                      <div className="d-flex align-items-center">
-                        <FontAwesomeIcon icon={faImage} className="me-2" />
-                        <span>Document uploaded</span>
-                      </div>
-                    ) : (
-                      <p className="text-danger">
-                        <FontAwesomeIcon icon={faInfoCircle} className="me-2" />
-                        No document uploaded yet
-                      </p>
-                    )}
-                  </div>
-                )}
-                <small className="form-text text-muted">
-                  Accepted formats: JPG, PNG, PDF. Max file size: 5MB
-                </small>
+                <p className="form-control-plaintext">
+                  Document upload functionality coming soon.
+                </p>
               </div>
             </div>
           </div>
@@ -570,9 +652,9 @@ const ContestantProfile = () => {
             <button 
               type="submit"
               className="btn btn-success"
-              disabled={loading}
+              disabled={updating}
             >
-              {loading ? (
+              {updating ? (
                 <>
                   <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                   Saving...

@@ -1,6 +1,5 @@
 // client/src/context/AuthContext.jsx
 import { createContext, useState, useEffect, useContext } from 'react';
-import { registerContestant } from '../services/authService';
 
 const AuthContext = createContext();
 
