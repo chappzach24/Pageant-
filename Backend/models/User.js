@@ -35,12 +35,23 @@ const UserSchema = new mongoose.Schema({
     type: Date,
     required: [true, 'Date of birth is required']
   },
+  role: {
+    type: String,
+    enum: ['contestant', 'organizer', 'admin'],
+    default: 'contestant'
+  },
+  isActive: {
+    type: Boolean,
+    default: true
+  },
   createdAt: {
     type: Date,
     default: Date.now
   }
 }, {
-  timestamps: true
+  timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
 });
 
 // Virtual for age calculation
@@ -75,6 +86,14 @@ UserSchema.virtual('ageGroup').get(function() {
   else if (age >= 19 && age <= 39) return '19 - 39 Years';
   else if (age >= 40) return '40+ Years';
   return 'Not Eligible';
+});
+
+// Virtual relationship with ContestantProfile
+UserSchema.virtual('contestantProfile', {
+  ref: 'ContestantProfile',
+  localField: '_id',
+  foreignField: 'user',
+  justOne: true
 });
 
 // Password hash middleware

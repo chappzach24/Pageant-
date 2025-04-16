@@ -20,6 +20,27 @@ router.post(
   authController.register
 );
 
+// @route   POST /api/auth/contestant-register
+// @desc    Register as a contestant
+// @access  Public
+router.post(
+  '/contestant-register',
+  [
+    check('username', 'Username is required').not().isEmpty(),
+    check('email', 'Please include a valid email').isEmail(),
+    check('password', 'Please enter a password with 6 or more characters').isLength({ min: 6 }),
+    check('firstName', 'First name is required').not().isEmpty(),
+    check('lastName', 'Last name is required').not().isEmpty(),
+    check('dateOfBirth', 'Date of birth is required').not().isEmpty(),
+    // Optional fields
+    check('biography', 'Biography must be less than 1000 characters').optional().isLength({ max: 1000 }),
+    check('funFact', 'Fun fact must be less than 200 characters').optional().isLength({ max: 200 }),
+    check('hairColor', 'Hair color must be a string').optional().isString(),
+    check('eyeColor', 'Eye color must be a string').optional().isString()
+  ],
+  authController.contestantRegister
+);
+
 // @route   POST /api/auth/login
 // @desc    Authenticate user & get token
 // @access  Public

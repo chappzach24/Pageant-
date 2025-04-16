@@ -1,5 +1,6 @@
 // client/src/context/AuthContext.jsx
 import { createContext, useState, useEffect, useContext } from 'react';
+import { registerContestant } from '../services/authService';
 
 const AuthContext = createContext();
 
@@ -120,6 +121,38 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Register as contestant function - Direct API call to avoid recursion
+  const registerContestant = async (contestantData) => {
+    if (!backendAvailable) {
+      throw new Error("Cannot connect to the server. Please check your connection or try again later.");
+    }
+
+    setError(null);
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/auth/contestant-register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify(contestantData),
+        credentials: 'include'
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Contestant registration failed');
+      }
+      
+      setUser(data.user);
+      return data;
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    }
+  };
+
   // Logout function
   const logout = async () => {
     if (!backendAvailable) {
@@ -148,6 +181,7 @@ export const AuthProvider = ({ children }) => {
       error, 
       login, 
       register, 
+      registerContestant,
       logout, 
       backendAvailable 
     }}>

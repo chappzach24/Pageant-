@@ -1,9 +1,9 @@
+// client/src/pages/ContestantSignup.jsx
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUser, faLock, faEnvelope, faCalendar } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '../context/AuthContext';
-import Button from '../components/global/Button';
 
 const ContestantSignup = () => {
   const [formData, setFormData] = useState({
@@ -19,7 +19,7 @@ const ContestantSignup = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   
-  const { register } = useAuth();
+  const { registerContestant } = useAuth();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -55,14 +55,17 @@ const ContestantSignup = () => {
       return;
     }
     
-    // Remove confirmPassword from data to send to API
-    const { confirmPassword, ...registerData } = formData;
-    
     try {
-      await register(registerData);
-      setSuccessMessage('Registration successful! Redirecting to pageant selection...');
+      // Remove confirmPassword from data to send to API
+      const { confirmPassword, ...registerData } = formData;
+      
+      // Register contestant
+      await registerContestant(registerData);
+      
+      setSuccessMessage('Registration successful! Redirecting to contestant dashboard...');
+      
       setTimeout(() => {
-        navigate('/contestant-dashboard'); // Redirect to pageants page after successful registration
+        navigate('/contestant-dashboard');
       }, 2000);
     } catch (error) {
       setErrorMessage(error.message || 'Registration failed. Please try again.');
@@ -226,7 +229,7 @@ const ContestantSignup = () => {
             
             <div className="text-center mt-3">
               <p className="u-text-dark mb-0">
-                Already have an account? <Link to="/contestant-dashboard" className="u-text-brand">Log In</Link>
+                Already have an account? <Link to="/contestant-login" className="u-text-brand">Log In</Link>
               </p>
             </div>
           </form>

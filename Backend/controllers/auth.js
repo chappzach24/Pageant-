@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const ContestantProfile = require('../models/ContestantProfile');
 const jwt = require('jsonwebtoken');
 const { validationResult } = require('express-validator');
 
@@ -62,12 +63,105 @@ exports.register = async (req, res) => {
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
+        role: user.role,
         age: user.age,
         ageGroup: user.ageGroup
       }
     });
   } catch (error) {
     console.error('Register error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Server error'
+    });
+  }
+};
+
+// @route   POST /api/auth/contestant-register
+// @desc    Register as a contestant
+// @access  Public
+exports.contestantRegister = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  const { 
+    username, 
+    email, 
+    password, 
+    firstName, 
+    lastName, 
+    dateOfBirth,
+    biography,
+    funFact,
+    hairColor,
+    eyeColor
+  } = req.body;
+
+  try {
+    // Check if user already exists
+    let user = await User.findOne({ $or: [{ email }, { username }] });
+    
+    if (user) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'User already exists with this email or username' 
+      });
+    }
+
+    // Create new user with contestant role
+    user = new User({
+      username,
+      email,
+      password,
+      firstName,
+      lastName,
+      dateOfBirth,
+      role: 'contestant' // Specifically set role to contestant
+    });
+
+    await user.save();
+
+    // Create contestant profile with any additional provided info
+    const contestantProfile = new ContestantProfile({
+      user: user._id,
+      biography: biography || '',
+      funFact: funFact || '',
+      appearance: {
+        hairColor: hairColor || '',
+        eyeColor: eyeColor || ''
+      }
+    });
+    
+    await contestantProfile.save();
+
+    // Generate JWT token
+    const token = generateToken(user._id);
+
+    // Set cookie
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+      sameSite: 'strict'
+    });
+
+    res.status(201).json({
+      success: true,
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: 'contestant',
+        age: user.age,
+        ageGroup: user.ageGroup
+      }
+    });
+  } catch (error) {
+    console.error('Contestant registration error:', error);
     res.status(500).json({
       success: false,
       error: 'Server error'
@@ -124,6 +218,7 @@ exports.login = async (req, res) => {
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
+        role: user.role,
         age: user.age,
         ageGroup: user.ageGroup
       }
@@ -176,6 +271,7 @@ exports.getMe = async (req, res) => {
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
+        role: user.role,
         age: user.age,
         ageGroup: user.ageGroup
       }
