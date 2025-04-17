@@ -49,9 +49,9 @@ const ContestantSidebar = ({ onToggle }) => {
       text: 'My Profile'
     },
     {
-      path: '/contestant-dashboard/join-pageants',
+      path: '/contestant-dashboard/join-pageant',
       icon: faCalendarPlus,
-      text: 'Join Pageants'
+      text: 'Join Pageant'
     },
     {
       path: '/contestant-dashboard/active-pageants',
