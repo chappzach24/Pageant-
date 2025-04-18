@@ -18,6 +18,7 @@ import ContestantDashboardLayout from "./components/dashboard/ContestantDashboar
 import ContestantDashboardHome from "./pages/dashboard/ContestantDashboardHome.jsx";
 import ContestantProfile from "./pages/dashboard/ContestantProfile.jsx";
 import JoinPageant from "./pages/dashboard/JoinPageant.jsx";
+import MyPageants from "./pages/dashboard/MyPageants.jsx";
 
 const router = createBrowserRouter([
   {
@@ -75,6 +76,10 @@ const router = createBrowserRouter([
               {
                 path: "join-pageant",
                 element: <JoinPageant />,
+              },
+              {
+                path: 'my-pageants',
+                element: <MyPageants />,
               },
 
             ],

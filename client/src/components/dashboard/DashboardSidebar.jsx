@@ -54,9 +54,9 @@ const ContestantSidebar = ({ onToggle }) => {
       text: 'Join Pageant'
     },
     {
-      path: '/contestant-dashboard/active-pageants',
+      path: '/contestant-dashboard/my-pageants',
       icon: faTrophy,
-      text: 'Active Pageants'
+      text: 'My Pageants'
     },
     {
       path: '/contestant-dashboard/past-pageants',
