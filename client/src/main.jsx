@@ -13,13 +13,14 @@ import ContestantLogin from "./pages/ContestantLogin.jsx";
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/auth/ProtectedRoute.jsx";
 
-// Dashboard Components
+// Contestant Dashboard Components
 import ContestantDashboardLayout from "./components/dashboard/ContestantDashboardLayout.jsx";
 import ContestantDashboardHome from "./pages/dashboard/ContestantDashboardHome.jsx";
 import ContestantProfile from "./pages/dashboard/ContestantProfile.jsx";
 import JoinPageant from "./pages/dashboard/JoinPageant.jsx";
 import MyPageants from "./pages/dashboard/MyPageants.jsx";
 import PastPageants from "./pages/dashboard/PastPageants.jsx";
+import ContestantPayments from "./pages/dashboard/ContestantPayments.jsx";
 
 const router = createBrowserRouter([
   {
@@ -85,6 +86,10 @@ const router = createBrowserRouter([
               {
                 path: 'past-pageants',
                 element: <PastPageants />,
+              },
+              {
+                path: 'payments',
+                element: <ContestantPayments />
               },
 
             ],
