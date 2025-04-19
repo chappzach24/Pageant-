@@ -170,6 +170,7 @@
   
   .btn-outline-primary:hover {
     background-color: var(--brand-color);
+    border-color: var(--brand-color);
     color: white;
   }
   
