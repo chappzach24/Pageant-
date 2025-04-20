@@ -22,6 +22,10 @@ import MyPageants from "./pages/dashboard/MyPageants.jsx";
 import PastPageants from "./pages/dashboard/PastPageants.jsx";
 import ContestantPayments from "./pages/dashboard/ContestantPayments.jsx";
 
+// Organization Dashboard Components
+import OrganizationDashboardLayout from "./components/dashboard/OrganizationDashboardLayout.jsx";
+import OrganizationDashboardHome from "./pages/dashboard/OrganizationDashboardHome.jsx";
+
 const router = createBrowserRouter([
   {
     path: "/",
@@ -47,7 +51,7 @@ const router = createBrowserRouter([
         path: "contestant-login",
         element: <ContestantLogin />,
       },
-      
+
       // Protected organizer routes
       {
         element: <ProtectedRoute redirectPath="/login" />,
@@ -56,9 +60,21 @@ const router = createBrowserRouter([
             path: "dashboard",
             element: <Dashboard />,
           },
+          // Organization Dashboard Route
+          {
+            path: "organization-dashboard",
+            element: <OrganizationDashboardLayout />,
+            children: [
+              {
+                index: true,
+                element: <OrganizationDashboardHome />,
+              },
+              // Additional organization routes will be added here
+            ],
+          },
         ],
       },
-      
+
       // Protected contestant routes
       {
         element: <ProtectedRoute redirectPath="/contestant-login" />,
@@ -80,18 +96,17 @@ const router = createBrowserRouter([
                 element: <JoinPageant />,
               },
               {
-                path: 'my-pageants',
+                path: "my-pageants",
                 element: <MyPageants />,
               },
               {
-                path: 'past-pageants',
+                path: "past-pageants",
                 element: <PastPageants />,
               },
               {
-                path: 'payments',
-                element: <ContestantPayments />
+                path: "payments",
+                element: <ContestantPayments />,
               },
-
             ],
           },
         ],
