@@ -1,10 +1,15 @@
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 
 const Button = ({ text = "Default Text", mode = "light", to = null }) => {
     const navigate = useNavigate();
+    const { user } = useAuth();
     
     const handleClick = () => {
-        if (to) {
+        if (to === '/organization-dashboard' && !user) {
+            // If not logged in, redirect to login page first
+            navigate('/login');
+        } else if (to) {
             navigate(to);
         }
     };

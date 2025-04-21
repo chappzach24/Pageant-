@@ -22,7 +22,7 @@ const Login = () => {
 
     try {
       await login(email, password);
-      navigate("/dashboard"); // Redirect to dashboard or home after login
+      navigate("/organization-dashboard"); // Redirect to dashboard or home after login
     } catch (error) {
       setErrorMessage(
         error.message || "Login failed. Please check your credentials."
