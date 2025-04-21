@@ -10,10 +10,12 @@ import {
   faHistory,
   faSort,
   faFire,
-  faMedal
+  faMedal,
+  faEye
 } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '../../context/AuthContext';
 import PageantCard from './PageantCard';
+import PageantDetailsModal from '../../components/dashboard/PageantDetailsModal';
 import '../../css/pastPageants.css';
 import '../../css/pageantCard.css';
 
@@ -26,6 +28,8 @@ const PastPageants = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterYear, setFilterYear] = useState('all');
   const [sortOption, setSortOption] = useState('newest'); // newest, oldest, placement
+  const [selectedPageant, setSelectedPageant] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Mock data for frontend development
   const mockPageants = [
@@ -207,6 +211,39 @@ const PastPageants = () => {
     return longestStreak;
   };
 
+  // Open modal with selected pageant details
+  const openPageantDetails = (pageant) => {
+    setSelectedPageant(pageant);
+    setIsModalOpen(true);
+    
+    // Prevent scrolling on the body while modal is open
+    document.body.style.overflow = 'hidden';
+  };
+
+  // Close modal
+  const closePageantDetails = () => {
+    setIsModalOpen(false);
+    setSelectedPageant(null);
+    
+    // Restore scrolling
+    document.body.style.overflow = 'auto';
+  };
+
+  // Custom renderer for the View Details button in PageantCard
+  const renderViewDetailsButton = (pageant) => (
+    <button 
+      className="btn btn-outline-primary w-100"
+      onClick={(e) => {
+        e.preventDefault(); // Prevent any default anchor behavior
+        e.stopPropagation(); // Prevent event bubbling
+        openPageantDetails(pageant);
+      }}
+    >
+      <FontAwesomeIcon icon={faEye} className="me-2" />
+      View Details
+    </button>
+  );
+
   return (
     <div className="past-pageants-container">
       <div className="page-header mb-4 d-flex justify-content-between align-items-center">
@@ -352,12 +389,23 @@ const PastPageants = () => {
                   type="past" 
                   showCategories={false}
                   showResults={true}
-                  className={`delay-${index}`} // For staggered animation
+                  className={`delay-${index % 6}`} // For staggered animation, cycle through 6 delays
+                  // Pass custom renderer to override the default Link behavior
+                  renderActions={() => renderViewDetailsButton(pageant)}
                 />
               </div>
             ))}
           </div>
         </div>
+      )}
+
+      {/* PageantDetailsModal */}
+      {isModalOpen && (
+        <PageantDetailsModal 
+          pageant={selectedPageant}
+          isOpen={isModalOpen}
+          onClose={closePageantDetails}
+        />
       )}
     </div>
   );

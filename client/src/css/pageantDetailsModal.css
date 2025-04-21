@@ -1007,8 +1007,8 @@
     height: 12px;
     border-radius: 50%;
     background-color: var(--brand-color);
-    left: -1.6rem;
-    top: 0.25rem;
+    left: -1.43rem;
+    top: 0.39rem;
   }
   
   .event-time {
@@ -1179,7 +1179,7 @@
   .results-summary h4 {
     font-size: 1.1rem;
     font-weight: 600;
-    margin-bottom: 1rem;
+    margin-bottom: 1rem !important;
     color: var(--secondary-color);
   }
   
@@ -1233,7 +1233,7 @@
   .category-results h4 {
     font-size: 1.25rem;
     font-weight: 600;
-    margin-bottom: 1rem;
+    margin-bottom: 1rem !important;
     color: var(--secondary-color);
   }
   
@@ -1394,7 +1394,6 @@
   @media (max-width: 767.98px) {
     .pageant-details-modal {
       max-height: 100vh;
-      border-radius: 0;
     }
     
     .modal-header {
