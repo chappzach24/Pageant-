@@ -1,0 +1,106 @@
+/* client/src/css/joinPageantSteps.css */
+
+/* Steps Indicator Styles */
+.steps-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2rem;
+  padding: 1rem 0;
+}
+
+/* Individual Step Item with Circle */
+.join-step-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  z-index: 2;
+}
+
+/* Step Circle - the numbered circle */
+.join-step-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #e0e0e0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+  font-weight: bold;
+  color: #757575;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Active Step styling */
+.join-step-item.active .join-step-circle {
+  background-color: var(--brand-color);
+  color: var(--secondary-color);
+}
+
+/* Step Labels - text below circle */
+.join-step-label {
+  font-size: 14px;
+  color: #757575;
+  transition: color 0.3s ease, font-weight 0.3s ease;
+  text-align: center;
+  max-width: 120px;
+}
+
+.join-step-item.active .join-step-label {
+  color: var(--secondary-color);
+  font-weight: 600;
+}
+
+/* Step Lines - the connecting lines between circles */
+.join-step-line {
+  flex-grow: 1;
+  height: 3px;
+  background-color: #e0e0e0;
+  margin: 0 10px;
+  min-width: 50px;
+  max-width: 100px;
+}
+
+/* Active step lines */
+.join-step-line.active {
+  background-color: var(--brand-color);
+}
+
+/* Responsive adjustments */
+@media (max-width: 767.98px) {
+  .join-step-label {
+    font-size: 12px;
+    max-width: 80px;
+  }
+  
+  .join-step-circle {
+    width: 32px;
+    height: 32px;
+    font-size: 0.9rem;
+  }
+  
+  .join-step-line {
+    min-width: 20px;
+    margin: 0 5px;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .join-step-label {
+    font-size: 10px;
+    max-width: 60px;
+  }
+  
+  .join-step-circle {
+    width: 28px;
+    height: 28px;
+    font-size: 0.8rem;
+  }
+  
+  .join-step-line {
+    min-width: 10px;
+    margin: 0 3px;
+  }
+}

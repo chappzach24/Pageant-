@@ -1,0 +1,272 @@
+/* client/src/css/pageantCard.css */
+
+/* Card Layout & Structure */
+.pageant-card {
+    border: none;
+    transition: transform 0.3s, box-shadow 0.3s;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+    min-height: 450px; /* Fixed minimum height */
+  }
+  
+  .pageant-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+  }
+  
+  .pageant-card .card-header {
+    background-color: white;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    padding: 1.5rem 1.5rem 1rem;
+    min-height: 80px; /* Fixed height for header */
+    display: flex;
+    align-items: center;
+  }
+  
+  .pageant-card .card-body {
+    padding: 1.75rem;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  /* Card Title */
+  .card-title {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--secondary-color);
+    line-height: 1.3;
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 75%;
+  }
+  
+  /* Info Sections Styling */
+  .pageant-info {
+    margin-bottom: 2rem; /* Increased spacing */
+  }
+  
+  .info-section {
+    height: 70px; /* Fixed height for each info section */
+    margin-bottom: 1.75rem; /* Increased spacing between sections */
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px dashed rgba(0, 0, 0, 0.08); /* Slightly darker border */
+  }
+  
+  .info-label {
+    font-weight: 600;
+    color: #6c757d;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.4rem; /* Decreased spacing between label and value */
+  }
+  
+  .info-value {
+    color: var(--secondary-color);
+    font-size: 1rem;
+    line-height: 1.4;
+  }
+  
+  /* Days Until Badge Styling */
+  .days-until {
+    padding: 0.5rem 0.875rem;
+    font-weight: 600;
+    font-size: 0.75rem;
+    border-radius: 50px;
+    white-space: nowrap;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .days-until.upcoming {
+    background-color: var(--brand-color);
+    color: var(--secondary-color);
+  }
+  
+  .days-until.coming-soon {
+    background-color: #ffc107;
+    color: #212529;
+  }
+  
+  .days-until.in-progress {
+    background-color: #28a745;
+    color: white;
+  }
+  
+  .days-until.completed {
+    background-color: #6c757d;
+    color: white;
+  }
+  
+  /* Category Badges */
+  .categories-section {
+    padding-top: 0.5rem;
+    margin-top: 0.5rem;
+    margin-bottom: 2rem; /* Increased spacing */
+    min-height: 120px; /* Fixed minimum height for categories section */
+  }
+  
+  .categories-list {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  
+  .category-badge {
+    padding: 0.5rem 0.75rem;
+    font-weight: 500;
+    font-size: 0.85rem;
+    border-radius: 50px;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    color: var(--secondary-color);
+    margin-right: 0.75rem; /* Increased spacing */
+    margin-bottom: 0.75rem; /* Increased spacing */
+    display: inline-block;
+  }
+  
+  /* Results Section for Past Pageants */
+  .results-section {
+    margin-bottom: 2rem;
+    min-height: 120px; /* Fixed minimum height */
+  }
+  
+  .results-table {
+    width: 100%;
+    overflow-x: auto;
+  }
+  
+  .results-table .table {
+    margin-bottom: 0;
+    font-size: 0.9rem;
+  }
+  
+  .results-table th {
+    font-weight: 600;
+    color: #6c757d;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+    border-top: none;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+  
+  .results-table td {
+    vertical-align: middle;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+  
+  /* Color classes for placements */
+  .text-gold {
+    color: #FFD700 !important;
+    font-weight: 700;
+  }
+  
+  .text-silver {
+    color: #C0C0C0 !important;
+    font-weight: 700;
+  }
+  
+  .text-bronze {
+    color: #CD7F32 !important;
+    font-weight: 700;
+  }
+  
+  /* Placement Badge */
+  .placement-badge {
+    padding: 0.5rem 0.875rem;
+    font-weight: 600;
+    font-size: 0.75rem;
+    border-radius: 50px;
+    white-space: nowrap;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .badge-gold {
+    background-color: #FFF8E1;
+    color: #FF8F00;
+    border: 1px solid #FFD54F;
+  }
+  
+  .badge-silver {
+    background-color: #F5F5F5;
+    color: #757575;
+    border: 1px solid #E0E0E0;
+  }
+  
+  .badge-bronze {
+    background-color: #F5E1C9;
+    color: #CD7F32;
+    border: 1px solid #CD7F32;
+  }
+  
+  .badge-participation {
+    background-color: #E8F5E9;
+    color: #388E3C;
+    border: 1px solid #C8E6C9;
+  }
+  
+  /* Button section */
+  .button-section {
+    margin-top: auto; /* Push to bottom */
+    padding-top: 1.5rem; /* Increased spacing */
+  }
+  
+  /* Button styling */
+  .btn-outline-primary {
+    color: var(--brand-color);
+    border-color: var(--brand-color);
+    padding: 0.75rem 1.25rem; /* Increased padding */
+    font-weight: 600;
+  }
+  
+  .btn-outline-primary:hover {
+    background-color: var(--brand-color);
+    color: white;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 767.98px) {
+    .info-section {
+      height: auto;
+      min-height: 65px;
+    }
+    
+    .info-label {
+      font-size: 0.8rem;
+    }
+    
+    .info-value {
+      font-size: 0.95rem;
+    }
+    
+    .placement-badge {
+      padding: 0.35rem 0.5rem;
+      font-size: 0.75rem;
+    }
+    
+    .categories-section,
+    .results-section {
+      min-height: auto;
+    }
+  }
+  
+  /* Animation for cards */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .pageant-card {
+    animation: fadeIn 0.5s ease-out forwards;
+  }
