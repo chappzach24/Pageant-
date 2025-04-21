@@ -1,4 +1,4 @@
-// client/src/pages/dashboard/MyPageants.jsx (Updated with PageantCard component)
+// client/src/pages/dashboard/MyPageants.jsx
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -6,12 +6,15 @@ import {
   faTrophy, 
   faExclamationTriangle, 
   faFilter,
-  faSearch
+  faSearch,
+  faEye
 } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '../../context/AuthContext';
 import PageantCard from './PageantCard';
+import PageantDetailsModal from '../../components/dashboard/PageantDetailsModal';
 import '../../css/myPageants.css';
 import '../../css/pageantCard.css';
+import '../../css/pageantDetailsModal.css';
 
 const MyPageants = () => {
   const { user } = useAuth();
@@ -21,6 +24,8 @@ const MyPageants = () => {
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all'); // all, upcoming, in-progress
+  const [selectedPageant, setSelectedPageant] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Mock data for frontend development
   const mockPageants = [
@@ -151,6 +156,39 @@ const MyPageants = () => {
     }
   }, [pageants, searchTerm, filterStatus]);
 
+  // Open modal with selected pageant details
+  const openPageantDetails = (pageant) => {
+    setSelectedPageant(pageant);
+    setIsModalOpen(true);
+    
+    // Prevent scrolling on the body while modal is open
+    document.body.style.overflow = 'hidden';
+  };
+
+  // Close modal
+  const closePageantDetails = () => {
+    setIsModalOpen(false);
+    setSelectedPageant(null);
+    
+    // Restore scrolling
+    document.body.style.overflow = 'auto';
+  };
+
+  // Custom renderer for the View Details button in PageantCard
+  const renderViewDetailsButton = (pageant) => (
+    <button 
+      className="btn btn-outline-primary w-100"
+      onClick={(e) => {
+        e.preventDefault(); // Prevent any default anchor behavior
+        e.stopPropagation(); // Prevent event bubbling
+        openPageantDetails(pageant);
+      }}
+    >
+      <FontAwesomeIcon icon={faEye} className="me-2" />
+      View Details
+    </button>
+  );
+
   return (
     <div className="active-pageants-container">
       <div className="page-header mb-4 d-flex justify-content-between align-items-center">
@@ -226,12 +264,23 @@ const MyPageants = () => {
                   pageant={pageant} 
                   type="active" 
                   showCategories={true}
-                  className={`delay-${index}`} // For staggered animation
+                  className={`delay-${index % 6}`} // For staggered animation, cycle through 6 delays
+                  // Pass custom renderer to override the default Link behavior
+                  renderActions={() => renderViewDetailsButton(pageant)}
                 />
               </div>
             ))}
           </div>
         </div>
+      )}
+
+      {/* PageantDetailsModal */}
+      {isModalOpen && (
+        <PageantDetailsModal 
+          pageant={selectedPageant}
+          isOpen={isModalOpen}
+          onClose={closePageantDetails}
+        />
       )}
     </div>
   );

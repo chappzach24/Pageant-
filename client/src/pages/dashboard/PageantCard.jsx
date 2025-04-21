@@ -1,5 +1,4 @@
-// client/src/components/dashboard/PageantCard.jsx
-import { useState } from 'react';
+// client/src/pages/dashboard/PageantCard.jsx
 import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
@@ -15,7 +14,8 @@ const PageantCard = ({
   type = 'active', // 'active' or 'past'
   showCategories = true,
   showResults = false,
-  className = ''
+  className = '',
+  renderActions = null // New prop for custom action renderer
 }) => {
   // Format date to a readable format
   const formatDate = (dateString) => {
@@ -54,8 +54,7 @@ const PageantCard = ({
     
     // If the pageant has already started
     if (pageantDate <= today) {
-      const endDate = new Date(pageantDate);
-      endDate.setDate(endDate.getDate() + 5); // Assuming a 5-day pageant if not provided
+      const endDate = new Date(pageant.endDate);
       
       // If pageant is ongoing
       if (endDate >= today) {
@@ -233,13 +232,18 @@ const PageantCard = ({
         )}
         
         <div className="button-section">
-          <Link 
-            to={`/contestant-dashboard/${type === 'past' ? 'past-pageant' : 'pageant'}/${pageant._id}`} 
-            className="btn btn-outline-primary w-100"
-          >
-            <FontAwesomeIcon icon={faEye} className="me-2" />
-            View Details
-          </Link>
+          {/* If custom renderer is provided, use it, otherwise use default Link */}
+          {renderActions ? (
+            renderActions()
+          ) : (
+            <Link 
+              to={`/contestant-dashboard/${type === 'past' ? 'past-pageant' : 'pageant'}/${pageant._id}`} 
+              className="btn btn-outline-primary w-100"
+            >
+              <FontAwesomeIcon icon={faEye} className="me-2" />
+              View Details
+            </Link>
+          )}
         </div>
       </div>
     </div>
@@ -251,7 +255,8 @@ PageantCard.propTypes = {
   type: PropTypes.oneOf(['active', 'past']),
   showCategories: PropTypes.bool,
   showResults: PropTypes.bool,
-  className: PropTypes.string
+  className: PropTypes.string,
+  renderActions: PropTypes.func
 };
 
 export default PageantCard;
