@@ -25,6 +25,8 @@ import ContestantPayments from "./pages/dashboard/ContestantPayments.jsx";
 // Organization Dashboard Components
 import OrganizationDashboardLayout from "./components/dashboard/OrganizationDashboardLayout.jsx";
 import OrganizationDashboardHome from "./pages/dashboard/OrganizationDashboardHome.jsx";
+import PageantManagement from "./pages/dashboard/PageantManagement.jsx";
+import AddPageant from "./pages/dashboard/AddPageant.jsx";
 
 const router = createBrowserRouter([
   {
@@ -69,7 +71,23 @@ const router = createBrowserRouter([
                 index: true,
                 element: <OrganizationDashboardHome />,
               },
-              // Additional organization routes will be added here
+              // Add pageant management routes
+              {
+                path: "organizations/:organizationId/pageants",
+                element: <PageantManagement />,
+              },
+              {
+                path: "organizations/:organizationId/pageants/new",
+                element: <AddPageant />,
+              },
+              {
+                path: "pageants/:pageantId/view",
+                element: <h1>View Pageant (Coming Soon)</h1>,
+              },
+              {
+                path: "pageants/:pageantId/edit",
+                element: <h1>Edit Pageant (Coming Soon)</h1>,
+              },
             ],
           },
         ],

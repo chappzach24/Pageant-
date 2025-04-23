@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBuilding, faPlus, faTimes } from "@fortawesome/free-solid-svg-icons";
 
 const OrganizationDashboardHome = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [organizations, setOrganizations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -473,7 +475,14 @@ const OrganizationDashboardHome = () => {
                     </small>
                   </div>
                   <div className="card-footer">
-                    <button className="btn btn-outline-primary w-100">
+                    <button
+                      className="btn btn-outline-primary w-100"
+                      onClick={() =>
+                        navigate(
+                          `/organization-dashboard/organizations/${org._id}/pageants`
+                        )
+                      }
+                    >
                       Manage Organization
                     </button>
                   </div>

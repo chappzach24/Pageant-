@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { useState, useEffect, useCallback } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faBuilding,
@@ -7,14 +7,52 @@ import {
   faSignOutAlt,
   faBars,
   faTimes,
+  faTrophy,
+  faChartBar,
+  faUsers,
+  faCog,
 } from "@fortawesome/free-solid-svg-icons";
 import { useAuth } from "../../context/AuthContext";
 
 const OrganizationSidebar = ({ onToggle }) => {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [organizations, setOrganizations] = useState([]);
+  const [loading, setLoading] = useState(true);
   const location = useLocation();
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  // Fetch user's organizations
+  const fetchOrganizations = useCallback(async () => {
+    try {
+      const response = await fetch(
+        `${
+          import.meta.env.VITE_API_URL || "http://localhost:5000"
+        }/api/organizations/user`,
+        {
+          method: "GET",
+          credentials: "include",
+          headers: {
+            Accept: "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) throw new Error("Failed to fetch organizations");
+
+      const data = await response.json();
+      setOrganizations(data.organizations || []);
+    } catch (err) {
+      console.error("Error fetching organizations:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchOrganizations();
+  }, [fetchOrganizations]);
 
   useEffect(() => {
     // Report collapsed state to parent component
@@ -32,7 +70,7 @@ const OrganizationSidebar = ({ onToggle }) => {
     }
   };
 
-  // Simplified navigation items - focusing on organization creation first
+  // Main navigation items
   const navItems = [
     {
       path: "/organization-dashboard",
@@ -159,42 +197,147 @@ const OrganizationSidebar = ({ onToggle }) => {
           </div>
         )}
 
-        {/* Navigation Links */}
+        {/* Main Navigation */}
         <nav className="sidebar-nav mt-3">
-          <ul
-            className="nav flex-column"
-            style={{ listStyle: "none", padding: 0 }}
-          >
-            {navItems.map((item, index) => (
-              <li className="nav-item" key={index}>
+          <div className="nav-section mb-2">
+            {!collapsed && (
+              <div className="nav-section-header px-3 mb-2">
+                <small className="text-uppercase text-light opacity-75">
+                  Main
+                </small>
+              </div>
+            )}
+            <ul
+              className="nav flex-column"
+              style={{ listStyle: "none", padding: 0 }}
+            >
+              {navItems.map((item, index) => (
+                <li className="nav-item" key={index}>
+                  <Link
+                    to={item.path}
+                    className={`nav-link d-flex align-items-center py-3 px-3 ${
+                      location.pathname === item.path ? "active" : ""
+                    }`}
+                    style={{
+                      color: "var(--primary-color)",
+                      textDecoration: "none",
+                      borderLeft:
+                        location.pathname === item.path
+                          ? "4px solid var(--brand-color)"
+                          : "4px solid transparent",
+                      backgroundColor:
+                        location.pathname === item.path
+                          ? "rgba(255,255,255,0.1)"
+                          : "transparent",
+                      transition: "all 0.3s ease",
+                    }}
+                  >
+                    <FontAwesomeIcon
+                      icon={item.icon}
+                      style={{ minWidth: "20px" }}
+                    />
+                    {!collapsed && <span className="ms-3">{item.text}</span>}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Organizations Section */}
+          {!loading && organizations.length > 0 && (
+            <div className="nav-section mb-2">
+              {!collapsed && (
+                <div className="nav-section-header px-3 mb-2">
+                  <small className="text-uppercase text-light opacity-75">
+                    My Organizations
+                  </small>
+                </div>
+              )}
+              <ul
+                className="nav flex-column"
+                style={{ listStyle: "none", padding: 0 }}
+              >
+                {organizations.map((org) => (
+                  <li className="nav-item" key={org._id}>
+                    <Link
+                      to={`/organization-dashboard/organizations/${org._id}/pageants`}
+                      className={`nav-link d-flex align-items-center py-3 px-3 ${
+                        location.pathname.includes(`/organizations/${org._id}`)
+                          ? "active"
+                          : ""
+                      }`}
+                      style={{
+                        color: "var(--primary-color)",
+                        textDecoration: "none",
+                        borderLeft: location.pathname.includes(
+                          `/organizations/${org._id}`
+                        )
+                          ? "4px solid var(--brand-color)"
+                          : "4px solid transparent",
+                        backgroundColor: location.pathname.includes(
+                          `/organizations/${org._id}`
+                        )
+                          ? "rgba(255,255,255,0.1)"
+                          : "transparent",
+                        transition: "all 0.3s ease",
+                      }}
+                    >
+                      <FontAwesomeIcon
+                        icon={faTrophy}
+                        style={{ minWidth: "20px" }}
+                      />
+                      {!collapsed && (
+                        <span
+                          className="ms-3 text-truncate"
+                          style={{ maxWidth: "170px" }}
+                        >
+                          {org.name}
+                        </span>
+                      )}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Settings Section */}
+          <div className="nav-section mt-4">
+            {!collapsed && (
+              <div className="nav-section-header px-3 mb-2">
+                <small className="text-uppercase text-light opacity-75">
+                  Settings
+                </small>
+              </div>
+            )}
+            <ul
+              className="nav flex-column"
+              style={{ listStyle: "none", padding: 0 }}
+            >
+              <li className="nav-item">
                 <Link
-                  to={item.path}
+                  to="/organization-dashboard/settings"
                   className={`nav-link d-flex align-items-center py-3 px-3 ${
-                    location.pathname === item.path ? "active" : ""
+                    location.pathname.includes("/settings") ? "active" : ""
                   }`}
                   style={{
                     color: "var(--primary-color)",
                     textDecoration: "none",
-                    borderLeft:
-                      location.pathname === item.path
-                        ? "4px solid var(--brand-color)"
-                        : "4px solid transparent",
-                    backgroundColor:
-                      location.pathname === item.path
-                        ? "rgba(255,255,255,0.1)"
-                        : "transparent",
+                    borderLeft: location.pathname.includes("/settings")
+                      ? "4px solid var(--brand-color)"
+                      : "4px solid transparent",
+                    backgroundColor: location.pathname.includes("/settings")
+                      ? "rgba(255,255,255,0.1)"
+                      : "transparent",
                     transition: "all 0.3s ease",
                   }}
                 >
-                  <FontAwesomeIcon
-                    icon={item.icon}
-                    style={{ minWidth: "20px" }}
-                  />
-                  {!collapsed && <span className="ms-3">{item.text}</span>}
+                  <FontAwesomeIcon icon={faCog} style={{ minWidth: "20px" }} />
+                  {!collapsed && <span className="ms-3">Settings</span>}
                 </Link>
               </li>
-            ))}
-          </ul>
+            </ul>
+          </div>
         </nav>
 
         {/* Logout Button */}
