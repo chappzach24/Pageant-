@@ -680,7 +680,7 @@
     border-radius: 8px;
     width: 100%;
     max-width: 900px;
-    max-height: 100vh;
+    max-height: 90vh;
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -1392,9 +1392,6 @@
   }
   
   @media (max-width: 767.98px) {
-    .pageant-details-modal {
-      max-height: 100vh;
-    }
     
     .modal-header {
       padding: 1rem 1.5rem;

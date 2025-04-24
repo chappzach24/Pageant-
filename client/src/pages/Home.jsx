@@ -12,7 +12,7 @@ const Home = () => {
     return (
         <>
             <Navbar />
-            <GridGuide />
+            {/* <GridGuide /> */}
             {/* Hero Section */}
             <div className="hero-wrap position-relative vh-100 vw-100">
                 <div className="hero-img position-absolute h-100 w-100">
