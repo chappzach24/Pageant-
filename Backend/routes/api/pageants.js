@@ -84,4 +84,9 @@ router.get('/:id/scores', protect, pageantController.getPageantScores);
 // @access  Private
 router.delete('/:id', protect, pageantController.deletePageant);
 
+// @route   GET /api/pageants/search/:pageantId
+// @desc    Find a pageant by its pageantID
+// @access  Public
+router.get('/search/:pageantId', pageantController.findPageantById);
+
 module.exports = router;

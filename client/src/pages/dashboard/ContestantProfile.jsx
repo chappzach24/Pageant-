@@ -61,7 +61,7 @@ const ContestantProfile = () => {
         
         if (response.success) {
           const { user: userData, profile } = response.contestant;
-          
+          console.log("data", userData);
           // Prepare profile data object
           const newProfileData = {
             // Basic info from user

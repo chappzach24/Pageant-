@@ -3,6 +3,34 @@ const Organization = require('../models/Organization');
 const Participant = require('../models/Participant');
 const { validationResult } = require('express-validator');
 
+// Generates a random pageant Id
+const generatePageantID = async () => {
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let isUnique = false;
+  let pageantID = '';
+  
+  // Keep generating IDs until we find a unique one
+  while (!isUnique) {
+    pageantID = 'PAG';
+    
+    // Generate 5 random alphanumeric characters
+    for (let i = 0; i < 5; i++) {
+      const randomIndex = Math.floor(Math.random() * characters.length);
+      pageantID += characters.charAt(randomIndex);
+    }
+    
+    // Check if this ID already exists in the database
+    const existingPageant = await Pageant.findOne({ pageantID });
+    
+    // If no pageant with this ID exists, we've found a unique ID
+    if (!existingPageant) {
+      isUnique = true;
+    }
+  }
+  
+  return pageantID;
+};
+
 // @route   POST /api/pageants
 // @desc    Create a new pageant
 // @access  Private
@@ -47,9 +75,13 @@ exports.createPageant = async (req, res) => {
       });
     }
 
+    // Generate a unique pageant ID
+    const pageantID = await generatePageantID();
+
     // Create new pageant
     const pageant = new Pageant({
       name,
+      pageantID,
       description,
       organization,
       startDate,
@@ -439,6 +471,65 @@ exports.getPageantScores = async (req, res) => {
     });
   } catch (error) {
     console.error('Get pageant scores error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Server error'
+    });
+  }
+};
+
+// @route   GET /api/pageants/search/:pageantId
+// @desc    Find a pageant by its pageantID
+// @access  Public
+exports.findPageantById = async (req, res) => {
+  try {
+    const { pageantId } = req.params;
+    
+    // Find pageant by pageantID
+    const pageant = await Pageant.findOne({ pageantID: pageantId })
+      .populate('organization', 'name description contactEmail');
+    
+    if (!pageant) {
+      return res.status(404).json({
+        success: false,
+        error: 'Pageant not found'
+      });
+    }
+    
+    // Check if pageant is published and public
+    if (pageant.status !== 'published' || !pageant.isPublic) {
+      return res.status(403).json({
+        success: false,
+        error: 'This pageant is not currently available for registration'
+      });
+    }
+    
+    // Check if registration is still open
+    const now = new Date();
+    if (now > pageant.registrationDeadline) {
+      return res.status(400).json({
+        success: false,
+        error: 'Registration for this pageant has closed'
+      });
+    }
+    
+    // Check if maximum participants limit is reached
+    if (pageant.maxParticipants > 0) {
+      const participantCount = await Participant.countDocuments({ pageant: pageant._id });
+      if (participantCount >= pageant.maxParticipants) {
+        return res.status(400).json({
+          success: false,
+          error: 'This pageant has reached its maximum number of participants'
+        });
+      }
+    }
+    
+    res.json({
+      success: true,
+      pageant
+    });
+  } catch (error) {
+    console.error('Find pageant by ID error:', error);
     res.status(500).json({
       success: false,
       error: 'Server error'

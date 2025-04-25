@@ -9,6 +9,12 @@ const PageantSchema = new mongoose.Schema({
     required: [true, 'Pageant name is required'],
     trim: true
   },
+  //  New field for a pageant ID
+  pageantID: {
+    type: String,
+    required: [true, "Pageant ID is required"],
+    unique: true,
+  },
   description: {
     type: String,
     required: [true, 'Description is required'],
@@ -113,6 +119,11 @@ const PageantSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
+  // New field to reference contestants
+  contestants: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'ContestantProfile'
+  }],
   createdAt: {
     type: Date,
     default: Date.now
