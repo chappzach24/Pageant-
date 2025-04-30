@@ -219,7 +219,34 @@ const JoinPageant = () => {
   const handleFileChange = (e, setImageFunction) => {
     const file = e.target.files[0];
     if (file) {
-      setImageFunction(file);
+      // Check file type
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/heic'];
+      if (!allowedTypes.includes(file.type)) {
+        setErrorMessage('Please upload only JPG, PNG, or HEIC images.');
+        return;
+      }
+      
+      // Check file size (max 5MB)
+      const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+      if (file.size > maxSize) {
+        setErrorMessage('Image size must be less than 5MB.');
+        return;
+      }
+      
+      // Clear any previous error
+      setErrorMessage('');
+      
+      // Create a preview of the image
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        // Create a copy of the file object with preview
+        const fileWithPreview = file;
+        fileWithPreview.preview = reader.result;
+        
+        // Set the updated file object
+        setImageFunction(fileWithPreview);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -239,23 +266,34 @@ const JoinPageant = () => {
     setErrorMessage('');
     
     try {
-      // Prepare registration data
-      const registrationData = {
-        pageantId: pageantDetails._id,
-        categories: selectedCategories
-      };
+      // Prepare form data for file uploads
+      const formData = new FormData();
+      
+      // Add pageant ID and categories
+      formData.append('pageantId', pageantDetails._id);
+      formData.append('categories', JSON.stringify(selectedCategories));
+      
+      // Add waiver agreement
+      formData.append('waiverAgreed', hasAgreedToTerms.toString());
+      
+      // Add uploaded images if they exist
+      if (faceImage) {
+        formData.append('faceImage', faceImage);
+      }
+      
+      if (fullBodyImage) {
+        formData.append('fullBodyImage', fullBodyImage);
+      }
       
       // Call API to register for pageant
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/participants`,
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/participants/register`,
         {
           method: 'POST',
           credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          },
-          body: JSON.stringify(registrationData)
+          // Don't set Content-Type header when using FormData
+          // The browser will set the correct Content-Type with boundary
+          body: formData
         }
       );
       
@@ -665,6 +703,13 @@ const JoinPageant = () => {
                     The photos will be reviewed by the pageant organizers.
                   </p>
                   
+                  {errorMessage && (
+                    <div className="alert alert-danger mb-4" role="alert">
+                      <FontAwesomeIcon icon={faExclamationTriangle} className="me-2" />
+                      {errorMessage}
+                    </div>
+                  )}
+                  
                   <div className="row g-4">
                     <div className="col-md-6">
                       <div className="upload-container">
@@ -672,11 +717,31 @@ const JoinPageant = () => {
                         <div 
                           className="upload-area p-4 text-center"
                           onClick={() => document.getElementById('facePhotoInput').click()}
+                          style={{ cursor: 'pointer' }}
                         >
                           {faceImage ? (
                             <div>
-                              <FontAwesomeIcon icon={faCheckCircle} className="text-success mb-3" size="2x" />
-                              <p className="mb-0">Uploaded: {faceImage.name}</p>
+                              {faceImage.preview ? (
+                                <img 
+                                  src={faceImage.preview} 
+                                  alt="Face preview" 
+                                  className="img-fluid mb-3" 
+                                  style={{ maxHeight: '200px', borderRadius: '4px' }}
+                                />
+                              ) : (
+                                <FontAwesomeIcon icon={faCheckCircle} className="text-success mb-3" size="2x" />
+                              )}
+                              <p className="mb-0">Selected: {faceImage.name}</p>
+                              <button 
+                                type="button" 
+                                className="btn btn-sm btn-outline-danger mt-2"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setFaceImage(null);
+                                }}
+                              >
+                                Remove
+                              </button>
                             </div>
                           ) : (
                             <div>
@@ -690,7 +755,7 @@ const JoinPageant = () => {
                           type="file" 
                           id="facePhotoInput" 
                           hidden 
-                          accept="image/*"
+                          accept="image/jpeg, image/png, image/jpg, image/heic"
                           onChange={(e) => handleFileChange(e, setFaceImage)}
                         />
                       </div>
@@ -702,11 +767,31 @@ const JoinPageant = () => {
                         <div 
                           className="upload-area p-4 text-center"
                           onClick={() => document.getElementById('fullBodyPhotoInput').click()}
+                          style={{ cursor: 'pointer' }}
                         >
                           {fullBodyImage ? (
                             <div>
-                              <FontAwesomeIcon icon={faCheckCircle} className="text-success mb-3" size="2x" />
-                              <p className="mb-0">Uploaded: {fullBodyImage.name}</p>
+                              {fullBodyImage.preview ? (
+                                <img 
+                                  src={fullBodyImage.preview} 
+                                  alt="Full body preview" 
+                                  className="img-fluid mb-3" 
+                                  style={{ maxHeight: '200px', borderRadius: '4px' }}
+                                />
+                              ) : (
+                                <FontAwesomeIcon icon={faCheckCircle} className="text-success mb-3" size="2x" />
+                              )}
+                              <p className="mb-0">Selected: {fullBodyImage.name}</p>
+                              <button 
+                                type="button" 
+                                className="btn btn-sm btn-outline-danger mt-2"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setFullBodyImage(null);
+                                }}
+                              >
+                                Remove
+                              </button>
                             </div>
                           ) : (
                             <div>
@@ -720,7 +805,7 @@ const JoinPageant = () => {
                           type="file" 
                           id="fullBodyPhotoInput" 
                           hidden 
-                          accept="image/*"
+                          accept="image/jpeg, image/png, image/jpg, image/heic"
                           onChange={(e) => handleFileChange(e, setFullBodyImage)}
                         />
                       </div>

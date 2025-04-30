@@ -1,20 +1,38 @@
+// Backend/controllers/participant.js
 const Participant = require('../models/Participant');
+const ContestantProfile = require('../models/ContestantProfile');
 const Pageant = require('../models/Pageant');
 const User = require('../models/User');
-const Organization = require('../models/Organization');
+const fs = require('fs');
+const path = require('path');
 const { validationResult } = require('express-validator');
 
-// @route   POST /api/participants
-// @desc    Register for a pageant
+// @route   POST /api/participants/register
+// @desc    Register for a pageant with photo uploads
 // @access  Private
 exports.registerForPageant = async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
-  }
-
   try {
-    const { pageantId, categories } = req.body;
+    // Check for validation errors
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Invalid request data', 
+        errors: errors.array() 
+      });
+    }
+
+    // Get pageant ID and categories from form data
+    const { pageantId } = req.body;
+    let categories;
+    try {
+      categories = JSON.parse(req.body.categories);
+    } catch (e) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid categories format'
+      });
+    }
 
     // Check if pageant exists
     const pageant = await Pageant.findById(pageantId);
@@ -120,16 +138,96 @@ exports.registerForPageant = async (req, res) => {
       });
     }
 
-    // Create new participant
+    // Check if waiver was agreed to
+    const waiverAgreed = req.body.waiverAgreed === 'true';
+    if (!waiverAgreed) {
+      return res.status(400).json({
+        success: false,
+        error: 'You must agree to the waiver to register'
+      });
+    }
+
+    // Get contestant profile
+    const contestantProfile = await ContestantProfile.findOne({ user: req.user.id });
+    if (!contestantProfile) {
+      return res.status(400).json({
+        success: false,
+        error: 'Contestant profile not found. Please complete your profile first.'
+      });
+    }
+
+    // Process and save uploaded photos
+    const photos = {
+      faceImage: {},
+      fullBodyImage: {}
+    };
+
+    // Handle file uploads if files were provided
+    const uploadDir = path.join(__dirname, '../uploads/contestants');
+    
+    // Ensure upload directory exists
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+
+    // Process face image if it exists
+    if (req.files && req.files.faceImage) {
+      const faceImage = req.files.faceImage;
+      const faceImageFileName = `${req.user.id}-face-${Date.now()}${path.extname(faceImage.name)}`;
+      const faceImagePath = path.join(uploadDir, faceImageFileName);
+      
+      // Move the file to the upload directory
+      await faceImage.mv(faceImagePath);
+      
+      photos.faceImage = {
+        filename: faceImageFileName,
+        originalName: faceImage.name,
+        mimeType: faceImage.mimetype,
+        uploadDate: new Date()
+      };
+    }
+
+    // Process full body image if it exists
+    if (req.files && req.files.fullBodyImage) {
+      const fullBodyImage = req.files.fullBodyImage;
+      const fullBodyImageFileName = `${req.user.id}-full-${Date.now()}${path.extname(fullBodyImage.name)}`;
+      const fullBodyImagePath = path.join(uploadDir, fullBodyImageFileName);
+      
+      // Move the file to the upload directory
+      await fullBodyImage.mv(fullBodyImagePath);
+      
+      photos.fullBodyImage = {
+        filename: fullBodyImageFileName,
+        originalName: fullBodyImage.name,
+        mimeType: fullBodyImage.mimetype,
+        uploadDate: new Date()
+      };
+    }
+
+    // Calculate payment amount
+    const baseEntryFee = pageant.entryFee?.amount || 0;
+    const categoryFee = categories.length * 5; // $5 per category
+    const totalPaymentAmount = baseEntryFee + categoryFee;
+
+    // Create new participant entry
     const participant = new Participant({
       user: req.user.id,
       pageant: pageantId,
+      contestantProfile: contestantProfile._id,
       categories: formattedCategories,
+      photos,
+      waiverAgreed,
       ageGroup,
-      paymentAmount: categories.length * 5 // $5 per category (platform fee)
+      paymentAmount: totalPaymentAmount
     });
 
     await participant.save();
+
+    // Update the pageant to include this contestant
+    await Pageant.findByIdAndUpdate(
+      pageantId,
+      { $addToSet: { contestants: contestantProfile._id } }
+    );
 
     res.status(201).json({
       success: true,
@@ -140,29 +238,6 @@ exports.registerForPageant = async (req, res) => {
     res.status(500).json({
       success: false,
       error: error.message || 'Server error'
-    });
-  }
-};
-
-// @route   GET /api/participants
-// @desc    Get all participants for the logged-in user
-// @access  Private
-exports.getUserParticipations = async (req, res) => {
-  try {
-    const participants = await Participant.find({ user: req.user.id })
-      .populate('pageant', 'name startDate endDate location status')
-      .sort({ registrationDate: -1 });
-
-    res.json({
-      success: true,
-      count: participants.length,
-      participants
-    });
-  } catch (error) {
-    console.error('Get user participations error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Server error'
     });
   }
 };

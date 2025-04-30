@@ -3,18 +3,31 @@ const router = express.Router();
 const { check } = require('express-validator');
 const participantController = require('../../controllers/participant');
 const { protect } = require('../../middleware/auth');
+const fileUpload = require('express-fileupload');
 
-// @route   POST /api/participants
-// @desc    Register for a pageant
+// Configure file upload middleware
+const uploadMiddleware = fileUpload({
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB file size limit
+  abortOnLimit: true,
+  limitHandler: (req, res, next) => {
+    return res.status(413).json({
+      success: false,
+      error: 'File size limit exceeded. Maximum file size is 5MB.'
+    });
+  },
+  createParentPath: true,
+  useTempFiles: true,
+  tempFileDir: '/tmp/'
+});
+
+// @route   POST /api/participants/register
+// @desc    Register for a pageant with photo uploads
 // @access  Private
 router.post(
-  '/',
+  '/register',
   [
     protect,
-    [
-      check('pageantId', 'Pageant ID is required').not().isEmpty(),
-      check('categories', 'Categories must be an array').isArray()
-    ]
+    uploadMiddleware
   ],
   participantController.registerForPageant
 );
