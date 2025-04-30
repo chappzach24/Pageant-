@@ -166,11 +166,14 @@ const JoinPageant = () => {
         }
       );
 
-      if (!response.ok) {
-        throw new Error('Failed to find pageant with that ID');
-      }
-
       const data = await response.json();
+      
+      if (!response.ok) {
+        // Display the specific error message from the backend
+        setPageantFound(false);
+        setErrorMessage(data.error || 'Failed to find pageant with that ID');
+        return;
+      }
       
       if (data.success && data.pageant) {
         setPageantFound(true);
@@ -575,12 +578,12 @@ const JoinPageant = () => {
                   </div>
                   
                   {/* Profile Completeness Warning (if applicable) */}
-                  {profileData.profile?.profileCompleteness < 100 && (
-                    <div className="alert alert-warning mb-4">
+                  {profileData.profile?.profileCompleteness < 74 && (
+                    <div className="alert alert-danger mb-4">
                       <FontAwesomeIcon icon={faExclamationTriangle} className="me-2" />
-                      Your profile is only {profileData.profile.profileCompleteness}% complete. 
-                      Consider <Link to="/contestant-dashboard/profile" className="alert-link">updating your profile</Link> with 
-                      complete information before registering for pageants.
+                      <strong>Your profile is only {profileData.profile.profileCompleteness}% complete.</strong><br />
+                      You must <Link to="/contestant-dashboard/profile" className="alert-link">complete your profile</Link> before 
+                      registering for pageants. All required information must be provided for safety and communication purposes.
                     </div>
                   )}
                   
@@ -638,7 +641,8 @@ const JoinPageant = () => {
                       <button 
                         className="btn btn-primary"
                         onClick={nextStep}
-                        disabled={selectedCategories.length === 0}
+                        disabled={selectedCategories.length === 0 || profileData.profile?.profileCompleteness < 74}
+                        title={profileData.profile?.profileCompleteness < 74 ? "Complete your profile first" : ""}
                       >
                         Continue <FontAwesomeIcon icon={faArrowRight} className="ms-2" />
                       </button>
@@ -793,27 +797,35 @@ const JoinPageant = () => {
                     <h5 className="mb-3">Registration Fee Summary</h5>
                     <div className="card">
                       <div className="card-header bg-light">
-                        <strong>Payment Details</strong>
+                        <strong>Order Summary</strong>
                       </div>
                       <div className="card-body">
-                        <div className="d-flex justify-content-between mb-2">
+                        <div className="d-flex justify-content-between align-items-center mb-3">
                           <span>Base Entry Fee:</span>
-                          <span>{pageantDetails.entryFee?.currency || 'USD'} {pageantDetails.entryFee?.amount || 0}</span>
+                          <span className="fw-bold">${pageantDetails.entryFee?.amount || 0}.00</span>
                         </div>
-                        <div className="d-flex justify-content-between mb-2">
-                          <span>Selected Categories:</span>
-                          <span>{selectedCategories.length}</span>
+                        <div className="d-flex justify-content-between align-items-center mb-3">
+                          <div>
+                            <span>Category Fee</span>
+                            <small className="d-block text-muted">({selectedCategories.length} {selectedCategories.length === 1 ? 'category' : 'categories'} × $5.00)</small>
+                          </div>
+                          <span className="fw-bold">${selectedCategories.length * 5}.00</span>
                         </div>
-                        <div className="d-flex justify-content-between mb-3">
-                          <span>Category Fee:</span>
-                          <span>{pageantDetails.entryFee?.currency || 'USD'} {selectedCategories.length * 5}</span>
+                        <hr className="my-3" />
+                        <div className="d-flex justify-content-between align-items-center mb-2">
+                          <span className="fw-bold">Subtotal:</span>
+                          <span className="fw-bold">${(pageantDetails.entryFee?.amount || 0) + (selectedCategories.length * 5)}.00</span>
                         </div>
-                        <hr />
-                        <div className="d-flex justify-content-between fw-bold">
-                          <span>Total:</span>
-                          <span>{pageantDetails.entryFee?.currency || 'USD'} {(pageantDetails.entryFee?.amount || 0) + (selectedCategories.length * 5)}</span>
+                        <div className="d-flex justify-content-between align-items-center text-success mb-3">
+                          <span>Processing Fee:</span>
+                          <span>$0.00</span>
                         </div>
-                        <p className="small text-muted mt-2">Payment will be collected after your registration is approved.</p>
+                        <hr className="my-3" />
+                        <div className="d-flex justify-content-between align-items-center">
+                          <span className="fw-bold fs-5">Total:</span>
+                          <span className="fw-bold fs-5">${(pageantDetails.entryFee?.amount || 0) + (selectedCategories.length * 5)}.00</span>
+                        </div>
+                        <p className="small text-muted mt-3 mb-0">Payment will be collected after your registration is approved.</p>
                       </div>
                     </div>
                   </div>

@@ -138,6 +138,11 @@
   padding: 1rem;
 }
 
+.waiver-container .card-body p {
+  color: var(--secondary-color);
+  max-width: none;
+}
+
 /* Fee Summary Styles */
 .fee-summary .card-header {
   background-color: #f8f9fa;
