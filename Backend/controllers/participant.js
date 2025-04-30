@@ -242,6 +242,32 @@ exports.registerForPageant = async (req, res) => {
   }
 };
 
+// @route   GET /api/participants
+// @desc    Get all participants for the logged-in user
+// @access  Private
+exports.getUserParticipations = async (req, res) => {
+  try {
+    const participants = await Participant.find({ user: req.user.id })
+      .populate({
+        path: 'pageant',
+        select: 'name startDate endDate location status'
+      })
+      .sort({ registrationDate: -1 });
+
+    res.json({
+      success: true,
+      count: participants.length,
+      participants
+    });
+  } catch (error) {
+    console.error('Get user participations error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Server error'
+    });
+  }
+};
+
 // @route   GET /api/participants/:id
 // @desc    Get participant by ID
 // @access  Private
