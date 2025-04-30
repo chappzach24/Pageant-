@@ -27,7 +27,7 @@ router.post(
   '/register',
   [
     protect,
-    uploadMiddleware
+    //uploadMiddleware
   ],
   participantController.registerForPageant
 );

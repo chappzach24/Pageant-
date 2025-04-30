@@ -173,6 +173,11 @@
   color: var(--secondary-color);
 }
 
+/* After submition */
+.success-container p {
+  color: var(--secondary-color);
+}
+
 /* Responsive Adjustments */
 @media (max-width: 767.98px) {
   .card-body {

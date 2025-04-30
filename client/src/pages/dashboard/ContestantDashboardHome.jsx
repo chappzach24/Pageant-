@@ -7,8 +7,14 @@ import {
   faTrophy, 
   faCalendarAlt, 
   faCheckCircle, 
-  faExclamationTriangle 
+  faExclamationTriangle,
+  faUsers,
+  faHistory,
+  faFire
 } from '@fortawesome/free-solid-svg-icons';
+import PageantCard from './PageantCard';
+import '../../css/myPageants.css';
+import '../../css/pageantCard.css';
 
 const ContestantDashboardHome = () => {
   const { user } = useAuth();
@@ -67,6 +73,8 @@ const ContestantDashboardHome = () => {
 
   // Format date to a readable format
   const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+    
     const options = { year: 'numeric', month: 'long', day: 'numeric' };
     return new Date(dateString).toLocaleDateString(undefined, options);
   };
@@ -74,7 +82,7 @@ const ContestantDashboardHome = () => {
   return (
     <div className="dashboard-home">
       <div className="welcome-section mb-4">
-        <h2 className="u-text-dark">Welcome back, {user?.firstName || 'Contestant'}!</h2>
+        <h2 className="u-text-dark mb-1">Welcome back, {user?.firstName || 'Contestant'}!</h2>
         <p className="u-text-dark">Here's what's happening with your pageants</p>
       </div>
 
@@ -95,22 +103,11 @@ const ContestantDashboardHome = () => {
             <div className="col-md-4">
               <div className="card h-100 shadow-sm">
                 <div className="card-body d-flex flex-column align-items-center text-center p-4">
-                  <div 
-                    className="stat-icon mb-3"
-                    style={{
-                      width: '60px',
-                      height: '60px',
-                      borderRadius: '50%',
-                      backgroundColor: 'rgba(212, 175, 55, 0.2)',
-                      display: 'flex',
-                      justifyContent: 'center',
-                      alignItems: 'center'
-                    }}
-                  >
-                    <FontAwesomeIcon icon={faTrophy} size="lg" style={{ color: 'var(--brand-color)' }} />
+                  <div className="stat-icon">
+                    <FontAwesomeIcon icon={faTrophy} />
                   </div>
-                  <h3 className="u-text-dark">{activePageants.length}</h3>
-                  <p className="u-text-dark">Active Pageants</p>
+                  <div className="stat-value">{activePageants.length}</div>
+                  <div className="stat-label">Active Pageants</div>
                 </div>
               </div>
             </div>
@@ -118,22 +115,11 @@ const ContestantDashboardHome = () => {
             <div className="col-md-4">
               <div className="card h-100 shadow-sm">
                 <div className="card-body d-flex flex-column align-items-center text-center p-4">
-                  <div 
-                    className="stat-icon mb-3"
-                    style={{
-                      width: '60px',
-                      height: '60px',
-                      borderRadius: '50%',
-                      backgroundColor: 'rgba(212, 175, 55, 0.2)',
-                      display: 'flex',
-                      justifyContent: 'center',
-                      alignItems: 'center'
-                    }}
-                  >
-                    <FontAwesomeIcon icon={faCalendarAlt} size="lg" style={{ color: 'var(--brand-color)' }} />
+                  <div className="stat-icon">
+                    <FontAwesomeIcon icon={faCalendarAlt} />
                   </div>
-                  <h3 className="u-text-dark">{upcomingPageants.length}</h3>
-                  <p className="u-text-dark">Upcoming Pageants</p>
+                  <div className="stat-value">{upcomingPageants.length}</div>
+                  <div className="stat-label">Upcoming Pageants</div>
                 </div>
               </div>
             </div>
@@ -141,22 +127,11 @@ const ContestantDashboardHome = () => {
             <div className="col-md-4">
               <div className="card h-100 shadow-sm">
                 <div className="card-body d-flex flex-column align-items-center text-center p-4">
-                  <div 
-                    className="stat-icon mb-3"
-                    style={{
-                      width: '60px',
-                      height: '60px',
-                      borderRadius: '50%',
-                      backgroundColor: 'rgba(212, 175, 55, 0.2)',
-                      display: 'flex',
-                      justifyContent: 'center',
-                      alignItems: 'center'
-                    }}
-                  >
-                    <FontAwesomeIcon icon={faTrophy} size="lg" style={{ color: 'var(--brand-color)' }} />
+                  <div className="stat-icon">
+                    <FontAwesomeIcon icon={faUsers} />
                   </div>
-                  <h3 className="u-text-dark">{user?.ageGroup || 'N/A'}</h3>
-                  <p className="u-text-dark">Your Age Group</p>
+                  <div className="stat-value">{user?.ageGroup || 'N/A'}</div>
+                  <div className="stat-label">Your Age Group</div>
                 </div>
               </div>
             </div>
@@ -166,7 +141,7 @@ const ContestantDashboardHome = () => {
           <div className="active-pageants-section mb-5">
             <div className="d-flex justify-content-between align-items-center mb-3">
               <h4 className="u-text-dark">Active Pageants</h4>
-              <Link to="/contestant-dashboard/active-pageants" className="btn btn-sm btn-outline-dark">View All</Link>
+              <Link to="/contestant-dashboard/my-pageants" className="btn btn-sm btn-outline-dark">View All</Link>
             </div>
 
             {activePageants.length === 0 ? (
@@ -178,23 +153,12 @@ const ContestantDashboardHome = () => {
               <div className="row g-4">
                 {activePageants.slice(0, 2).map((participation, index) => (
                   <div className="col-md-6" key={index}>
-                    <div className="card h-100 shadow-sm">
-                      <div className="card-body">
-                        <h5 className="card-title">{participation.pageant.name}</h5>
-                        <p className="u-text-dark mb-2">
-                          <strong>Status:</strong> <span className="badge bg-success">In Progress</span>
-                        </p>
-                        <p className="u-text-dark mb-2">
-                          <strong>Date:</strong> {formatDate(participation.pageant.startDate)} - {formatDate(participation.pageant.endDate)}
-                        </p>
-                        <p className="u-text-dark mb-2">
-                          <strong>Location:</strong> {participation.pageant.location?.venue || 'Online'}
-                        </p>
-                        <Link to={`/contestant-dashboard/pageant/${participation.pageant._id}`} className="btn btn-dark mt-2">
-                          View Details
-                        </Link>
-                      </div>
-                    </div>
+                    <PageantCard 
+                      pageant={participation.pageant}
+                      type="active"
+                      showCategories={true}
+                      className={`delay-${index % 6}`}
+                    />
                   </div>
                 ))}
               </div>
@@ -205,7 +169,7 @@ const ContestantDashboardHome = () => {
           <div className="upcoming-pageants-section">
             <div className="d-flex justify-content-between align-items-center mb-3">
               <h4 className="u-text-dark">Upcoming Pageants</h4>
-              <Link to="/contestant-dashboard/join-pageants" className="btn btn-sm btn-outline-dark">Find More</Link>
+              <Link to="/contestant-dashboard/join-pageant" className="btn btn-sm btn-outline-dark">Find More</Link>
             </div>
 
             {upcomingPageants.length === 0 ? (
@@ -217,24 +181,12 @@ const ContestantDashboardHome = () => {
               <div className="row g-4">
                 {upcomingPageants.slice(0, 2).map((participation, index) => (
                   <div className="col-md-6" key={index}>
-                    <div className="card h-100 shadow-sm">
-                      <div className="card-body">
-                        <h5 className="card-title">{participation.pageant.name}</h5>
-                        <p className="u-text-dark mb-2">
-                          <strong>Status:</strong> <span className="badge bg-warning text-dark">Upcoming</span>
-                        </p>
-                        <p className="u-text-dark mb-2">
-                          <strong>Date:</strong> {formatDate(participation.pageant.startDate)} - {formatDate(participation.pageant.endDate)}
-                        </p>
-                        <p className="u-text-dark mb-2">
-                          <strong>Location:</strong> {participation.pageant.location?.venue || 'Online'}
-                        </p>
-                        <div className="mt-2">
-                          <FontAwesomeIcon icon={faCheckCircle} className="text-success me-2" />
-                          <span className="u-text-dark">Registration Complete</span>
-                        </div>
-                      </div>
-                    </div>
+                    <PageantCard 
+                      pageant={participation.pageant}
+                      type="active"
+                      showCategories={true}
+                      className={`delay-${index % 6}`}
+                    />
                   </div>
                 ))}
               </div>

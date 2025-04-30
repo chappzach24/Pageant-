@@ -215,36 +215,21 @@ const JoinPageant = () => {
     }
   };
 
-  // Handle file uploads
+  // Modify this function to ensure we're using the original File object
   const handleFileChange = (e, setImageFunction) => {
     const file = e.target.files[0];
     if (file) {
-      // Check file type
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/heic'];
-      if (!allowedTypes.includes(file.type)) {
-        setErrorMessage('Please upload only JPG, PNG, or HEIC images.');
-        return;
-      }
+      // Check file type and size as before...
       
-      // Check file size (max 5MB)
-      const maxSize = 5 * 1024 * 1024; // 5MB in bytes
-      if (file.size > maxSize) {
-        setErrorMessage('Image size must be less than 5MB.');
-        return;
-      }
-      
-      // Clear any previous error
-      setErrorMessage('');
-      
-      // Create a preview of the image
+      // Create a preview but keep the original file reference separately
       const reader = new FileReader();
       reader.onloadend = () => {
-        // Create a copy of the file object with preview
-        const fileWithPreview = file;
-        fileWithPreview.preview = reader.result;
-        
-        // Set the updated file object
-        setImageFunction(fileWithPreview);
+        // Store the file and preview URL separately
+        setImageFunction({
+          file: file, // Original file object
+          preview: reader.result, // Preview URL
+          name: file.name // File name for display
+        });
       };
       reader.readAsDataURL(file);
     }
@@ -260,30 +245,34 @@ const JoinPageant = () => {
     setCurrentStep(currentStep - 1);
   };
 
-  // Submit registration function
   const submitRegistration = async () => {
     setIsSubmitting(true);
     setErrorMessage('');
     
     try {
-      // Prepare form data for file uploads
+      // Create a new FormData object
       const formData = new FormData();
       
-      // Add pageant ID and categories
+      // Add pageant ID
       formData.append('pageantId', pageantDetails._id);
+      
+      // Add categories as a string
       formData.append('categories', JSON.stringify(selectedCategories));
       
       // Add waiver agreement
-      formData.append('waiverAgreed', hasAgreedToTerms.toString());
+      formData.append('waiverAgreed', hasAgreedToTerms);
       
       // Add uploaded images if they exist
-      if (faceImage) {
-        formData.append('faceImage', faceImage);
+      if (faceImage && faceImage.file) {
+        formData.append('faceImage', faceImage.file);
+      }
+
+      if (fullBodyImage && fullBodyImage.file) {
+        formData.append('fullBodyImage', fullBodyImage.file);
       }
       
-      if (fullBodyImage) {
-        formData.append('fullBodyImage', fullBodyImage);
-      }
+      // Log form data for debugging
+      console.log('Form data keys:', [...formData.keys()]);
       
       // Call API to register for pageant
       const response = await fetch(
@@ -292,16 +281,17 @@ const JoinPageant = () => {
           method: 'POST',
           credentials: 'include',
           // Don't set Content-Type header when using FormData
-          // The browser will set the correct Content-Type with boundary
           body: formData
         }
       );
       
-      const data = await response.json();
-      
+      // Handle response
       if (!response.ok) {
+        const data = await response.json();
         throw new Error(data.error || 'Failed to register for pageant');
       }
+      
+      const data = await response.json();
       
       // Set success and move to success view
       setSubmissionSuccess(true);

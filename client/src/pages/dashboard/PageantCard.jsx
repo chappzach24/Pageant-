@@ -141,6 +141,7 @@ const PageantCard = ({
 
   // Get card type specific elements
   const getCardHeader = () => {
+    console.log(pageant)
     if (type === 'active') {
       const daysUntil = calculateDaysUntil(pageant.startDate);
       
