@@ -703,28 +703,26 @@ const JoinPageant = () => {
                   <div className="row g-4">
                     <div className="col-md-6">
                       <div className="upload-container">
-                        <h5 className="mb-3">Headshot / Face Photo</h5>
+                        <h5>Headshot / Face Photo</h5>
                         <div 
-                          className="upload-area p-4 text-center"
+                          className="upload-area"
                           onClick={() => document.getElementById('facePhotoInput').click()}
-                          style={{ cursor: 'pointer' }}
                         >
                           {faceImage ? (
-                            <div>
+                            <div className="image-preview-container">
                               {faceImage.preview ? (
                                 <img 
                                   src={faceImage.preview} 
                                   alt="Face preview" 
-                                  className="img-fluid mb-3" 
-                                  style={{ maxHeight: '200px', borderRadius: '4px' }}
+                                  className="preview-image" 
                                 />
                               ) : (
                                 <FontAwesomeIcon icon={faCheckCircle} className="text-success mb-3" size="2x" />
                               )}
-                              <p className="mb-0">Selected: {faceImage.name}</p>
+                              <p className="mb-1">Selected: {faceImage.name}</p>
                               <button 
                                 type="button" 
-                                className="btn btn-sm btn-outline-danger mt-2"
+                                className="btn btn-sm btn-outline-danger remove-button"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   setFaceImage(null);
@@ -734,7 +732,7 @@ const JoinPageant = () => {
                               </button>
                             </div>
                           ) : (
-                            <div>
+                            <div className="upload-instructions">
                               <FontAwesomeIcon icon={faImage} className="mb-3" size="2x" />
                               <p>Click to upload or drag and drop</p>
                               <p className="small text-muted mb-0">JPG, PNG or HEIC (max 5MB)</p>
@@ -753,28 +751,26 @@ const JoinPageant = () => {
                     
                     <div className="col-md-6">
                       <div className="upload-container">
-                        <h5 className="mb-3">Full Body Photo</h5>
+                        <h5>Full Body Photo</h5>
                         <div 
-                          className="upload-area p-4 text-center"
+                          className="upload-area"
                           onClick={() => document.getElementById('fullBodyPhotoInput').click()}
-                          style={{ cursor: 'pointer' }}
                         >
                           {fullBodyImage ? (
-                            <div>
+                            <div className="image-preview-container">
                               {fullBodyImage.preview ? (
                                 <img 
                                   src={fullBodyImage.preview} 
                                   alt="Full body preview" 
-                                  className="img-fluid mb-3" 
-                                  style={{ maxHeight: '200px', borderRadius: '4px' }}
+                                  className="preview-image"
                                 />
                               ) : (
                                 <FontAwesomeIcon icon={faCheckCircle} className="text-success mb-3" size="2x" />
                               )}
-                              <p className="mb-0">Selected: {fullBodyImage.name}</p>
+                              <p className="mb-1">Selected: {fullBodyImage.name}</p>
                               <button 
                                 type="button" 
-                                className="btn btn-sm btn-outline-danger mt-2"
+                                className="btn btn-sm btn-outline-danger remove-button"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   setFullBodyImage(null);
@@ -784,7 +780,7 @@ const JoinPageant = () => {
                               </button>
                             </div>
                           ) : (
-                            <div>
+                            <div className="upload-instructions">
                               <FontAwesomeIcon icon={faImage} className="mb-3" size="2x" />
                               <p>Click to upload or drag and drop</p>
                               <p className="small text-muted mb-0">JPG, PNG or HEIC (max 5MB)</p>

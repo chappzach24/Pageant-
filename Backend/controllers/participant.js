@@ -221,12 +221,13 @@ exports.registerForPageant = async (req, res) => {
       paymentAmount: totalPaymentAmount
     });
 
+    // Save the participant record first to generate its _id
     await participant.save();
 
-    // Update the pageant to include this contestant
+    // Update the pageant to include this participant, not the contestant profile
     await Pageant.findByIdAndUpdate(
       pageantId,
-      { $addToSet: { contestants: contestantProfile._id } }
+      { $addToSet: { contestants: participant._id } }
     );
 
     res.status(201).json({
@@ -250,7 +251,12 @@ exports.getUserParticipations = async (req, res) => {
     const participants = await Participant.find({ user: req.user.id })
       .populate({
         path: 'pageant',
-        select: 'name startDate endDate location status'
+        select: 'name startDate endDate location status organization',
+        // Populate the organization field within the pageant
+        populate: {
+          path: 'organization',
+          select: 'name description' // Select only the fields we need
+        }
       })
       .sort({ registrationDate: -1 });
 

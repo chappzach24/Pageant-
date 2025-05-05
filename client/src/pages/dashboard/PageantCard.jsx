@@ -139,9 +139,37 @@ const PageantCard = ({
     return 'th';
   };
 
+  // Get organization name, handling deeply nested objects
+  const getOrganizationName = () => {
+    if (!pageant.organization) return 'Unknown Organization';
+    
+    // Log the organization data type and structure to help with debugging
+    console.log('Organization data:', pageant.organization);
+    
+    // Case 1: Organization is a string
+    if (typeof pageant.organization === 'string') {
+      return pageant.organization;
+    }
+    
+    // Case 2: Organization is an object with a name property
+    if (typeof pageant.organization === 'object') {
+      // Direct name property
+      if (pageant.organization.name) {
+        return pageant.organization.name;
+      }
+      
+      // _id may be an object with name
+      if (pageant.organization._id && typeof pageant.organization._id === 'object' && pageant.organization._id.name) {
+        return pageant.organization._id.name;
+      }
+    }
+    
+    // Case 3: Fall back to string representation or default
+    return String(pageant.organization).substring(0, 24) || 'Unknown Organization';
+  };
+
   // Get card type specific elements
   const getCardHeader = () => {
-    console.log(pageant)
     if (type === 'active') {
       const daysUntil = calculateDaysUntil(pageant.startDate);
       
@@ -171,7 +199,7 @@ const PageantCard = ({
         <div className="pageant-info">
           <div className="info-section">
             <div className="info-label">Organization</div>
-            <div className="info-value">{pageant.organization}</div>
+            <div className="info-value">{getOrganizationName()}</div>
           </div>
           
           <div className="info-section">
@@ -232,7 +260,7 @@ const PageantCard = ({
           </div>
         )}
         
-        <div className="button-section">
+        <div className="button-section mt-auto">
           {/* If custom renderer is provided, use it, otherwise use default Link */}
           {renderActions ? (
             renderActions()

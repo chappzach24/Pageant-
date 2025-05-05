@@ -40,21 +40,55 @@ const ContestantDashboardHome = () => {
         }
 
         const data = await response.json();
+        if (data.participants && data.participants.length > 0) {
+          debugParticipantData(data.participants);
+        }
         
         const now = new Date();
         
+        // Filter and process pageant data
+        const processPageantsData = (participants) => {
+          return participants.map(p => {
+            // Ensure the pageant object has all necessary fields
+            const pageant = p.pageant;
+            
+            // If pageant organization is populated as an object, make sure we retain the structure
+            // If not, we'll rely on the PageantCard to handle the display
+            
+            return {
+              ...p,
+              pageant: {
+                ...pageant,
+                // Ensure categories are properly formatted
+                categories: p.categories ? p.categories.map(cat => ({
+                  category: cat.category,
+                  score: cat.score,
+                  notes: cat.notes
+                })) : []
+              }
+            };
+          });
+        };
+        
         // Filter upcoming pageants (pageants that haven't started yet)
-        const upcoming = data.participants.filter(p => {
-          const startDate = new Date(p.pageant.startDate);
-          return startDate > now;
-        });
+        const upcoming = data.participants
+          .filter(p => {
+            const startDate = new Date(p.pageant.startDate);
+            return startDate > now;
+          })
+          .map(p => processPageantsData([p])[0]);
         
         // Filter active pageants (pageants that have started but not ended)
-        const active = data.participants.filter(p => {
-          const startDate = new Date(p.pageant.startDate);
-          const endDate = new Date(p.pageant.endDate);
-          return startDate <= now && endDate >= now;
-        });
+        const active = data.participants
+          .filter(p => {
+            const startDate = new Date(p.pageant.startDate);
+            const endDate = new Date(p.pageant.endDate);
+            return startDate <= now && endDate >= now;
+          })
+          .map(p => processPageantsData([p])[0]);
+        
+        console.log('Processed upcoming pageants:', upcoming);
+        console.log('Processed active pageants:', active);
         
         setUpcomingPageants(upcoming);
         setActivePageants(active);
@@ -70,6 +104,41 @@ const ContestantDashboardHome = () => {
       fetchContestantData();
     }
   }, [user]);
+
+  // Debugging function to check data structure
+  const debugParticipantData = (participants) => {
+    console.log('=========== DEBUGGING PARTICIPANT DATA ===========');
+    
+    participants.forEach((p, index) => {
+      console.log(`Participant ${index + 1}:`, {
+        participantId: p._id,
+        pageantId: p.pageant?._id,
+        pageantName: p.pageant?.name,
+        
+        // Organization data is what we want to check
+        organizationType: typeof p.pageant?.organization,
+        organizationIsObject: typeof p.pageant?.organization === 'object',
+        organizationIsString: typeof p.pageant?.organization === 'string',
+        organizationHasName: p.pageant?.organization?.name !== undefined,
+        
+        // The raw organization data
+        organizationData: p.pageant?.organization,
+        
+        // If it's an object, check the structure
+        organizationName: typeof p.pageant?.organization === 'object' 
+          ? p.pageant?.organization?.name 
+          : p.pageant?.organization,
+          
+        // Categories data  
+        categoriesCount: p.categories?.length,
+        categorySample: p.categories?.length > 0 ? p.categories[0] : null
+      });
+    });
+    
+    console.log('===================================================');
+    
+    return participants;
+  };
 
   // Format date to a readable format
   const formatDate = (dateString) => {

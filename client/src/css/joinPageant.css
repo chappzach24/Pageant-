@@ -106,13 +106,31 @@
 }
 
 /* File Upload Area */
+.upload-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.upload-container h5 {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+/* Improved Upload Area */
 .upload-area {
   border: 2px dashed #ccc;
-  border-radius: 5px;
+  border-radius: 8px;
   padding: 1.5rem;
   text-align: center;
   transition: border-color 0.3s ease, background-color 0.3s ease;
   cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 280px; /* Fixed height for both containers */
+  flex: 1;
 }
 
 .upload-area:hover {
@@ -122,7 +140,60 @@
 
 .upload-area .fa-image {
   color: #aaa;
+  font-size: 2.5rem;
   margin-bottom: 1rem;
+}
+
+/* Image Preview Container */
+.image-preview-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Image Preview Styling */
+.upload-area img.preview-image {
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 180px; /* Fixed height for image previews */
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  object-fit: contain;
+}
+
+/* Button styling */
+.upload-area .remove-button {
+  margin-top: 0.5rem;
+}
+
+/* For equal height containers in the row */
+.step-content .row {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.step-content .col-md-6 {
+  display: flex;
+  margin-bottom: 1rem;
+}
+
+/* Ensure upload instructions are centered */
+.upload-instructions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.upload-instructions p {
+  margin-bottom: 0.5rem;
+}
+
+.upload-instructions .small {
+  color: #6c757d;
 }
 
 /* Waiver Document Styles */

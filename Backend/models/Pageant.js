@@ -122,7 +122,7 @@ const PageantSchema = new mongoose.Schema({
   // New field to reference contestants
   contestants: [{
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'ContestantProfile'
+    ref: 'Participant'
   }],
   createdAt: {
     type: Date,
