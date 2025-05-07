@@ -251,7 +251,7 @@ exports.getUserParticipations = async (req, res) => {
     const participants = await Participant.find({ user: req.user.id })
       .populate({
         path: 'pageant',
-        select: 'name startDate endDate location status organization',
+        select: 'name startDate endDate location status organization entryFee',
         // Populate the organization field within the pageant
         populate: {
           path: 'organization',

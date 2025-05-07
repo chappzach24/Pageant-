@@ -1,5 +1,5 @@
 // client/src/components/dashboard/PageantDetailsModal.jsx
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
@@ -33,6 +33,10 @@ import '../../css/pageantDetailsModal.css';
 
 const PageantDetailsModal = ({ pageant, isOpen, onClose }) => {
   const [activeTab, setActiveTab] = useState('overview');
+
+  useEffect(() => {
+    console.log("Pageant", pageant);
+  })
   
   // Return null if modal shouldn't be shown or no pageant data
   if (!isOpen || !pageant) return null;
@@ -95,13 +99,28 @@ const PageantDetailsModal = ({ pageant, isOpen, onClose }) => {
     return new Date(dateString).toLocaleDateString(undefined, options);
   };
 
-  // Format currency
-  const formatCurrency = (amount) => {
-    if (!amount && amount !== 0) return 'N/A';
+  // Format currency - Updated to handle different input types
+  const formatCurrency = (value, defaultCurrency = 'USD') => {
+    if (value === null || value === undefined) return 'N/A';
+    
+    let amount = 0;
+    let currency = defaultCurrency;
+    
+    // Handle object with amount and currency properties
+    if (typeof value === 'object' && value !== null) {
+      amount = value.amount || 0;
+      currency = value.currency || defaultCurrency;
+    } else if (typeof value === 'number') {
+      amount = value;
+    } else if (typeof value === 'string' && !isNaN(parseFloat(value))) {
+      amount = parseFloat(value);
+    } else {
+      return 'N/A';
+    }
     
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'USD'
+      currency: currency
     }).format(amount);
   };
 
@@ -212,13 +231,53 @@ const PageantDetailsModal = ({ pageant, isOpen, onClose }) => {
     }
   };
 
+  // Helper function to extract categories from the pageant object
+  const getCategories = () => {
+    if (!pageant.categories) return [];
+    
+    if (!Array.isArray(pageant.categories)) {
+      console.warn('Expected categories to be an array, but got:', typeof pageant.categories);
+      return [];
+    }
+    
+    return pageant.categories.map(cat => {
+      if (typeof cat === 'string') return cat;
+      if (typeof cat === 'object' && cat !== null) {
+        return cat.category || cat.name || 'Unknown Category';
+      }
+      return 'Unknown Category';
+    });
+  };
+
+  // Safe getter for string values, prevents rendering objects directly
+  const getStringValue = (value, defaultValue = '') => {
+    if (value === null || value === undefined) {
+      return defaultValue;
+    }
+    
+    if (typeof value === 'string') {
+      return value;
+    }
+    
+    if (typeof value === 'object') {
+      // Convert object to string to prevent direct rendering
+      try {
+        return JSON.stringify(value);
+      } catch (e) {
+        console.error('Error stringifying object:', e);
+        return defaultValue;
+      }
+    }
+    
+    // For other types like numbers, booleans
+    return String(value);
+  };
+
   // Pageant status
   const status = getStatusLabel();
 
   // Get pageant categories
-  const categories = Array.isArray(pageant.categories) 
-    ? pageant.categories.map(cat => typeof cat === 'string' ? cat : cat.category)
-    : [];
+  const categories = getCategories();
 
   // Mock schedule data (for demonstration)
   const scheduleData = [
@@ -258,37 +317,13 @@ const PageantDetailsModal = ({ pageant, isOpen, onClose }) => {
     { name: 'Venue Map', type: 'PDF', size: '0.3 MB', date: '2025-02-10' }
   ];
 
-  // Safe getter for string values, prevents rendering objects directly
-  const getStringValue = (value, defaultValue = '') => {
-    if (value === null || value === undefined) {
-      return defaultValue;
-    }
-    
-    if (typeof value === 'string') {
-      return value;
-    }
-    
-    if (typeof value === 'object') {
-      // Convert object to string to prevent direct rendering
-      try {
-        return JSON.stringify(value);
-      } catch (e) {
-        console.error('Error stringifying object:', e);
-        return defaultValue;
-      }
-    }
-    
-    // For other types like numbers, booleans
-    return String(value);
-  };
-
   return (
     <div className="pageant-details-modal-backdrop" onClick={onClose}>
       <div className="pageant-details-modal" onClick={e => e.stopPropagation()}>
         {/* Modal Header */}
         <div className="modal-header">
           <div>
-            <h2 className="modal-title">{pageant.name}</h2>
+            <h2 className="modal-title">{getName()}</h2>
             <p className="modal-subtitle">{getStringValue(pageant.organization)}</p>
           </div>
           <button className="close-button" onClick={onClose}>&times;</button>
@@ -417,7 +452,7 @@ const PageantDetailsModal = ({ pageant, isOpen, onClose }) => {
                   </div>
                   <div className="info-details">
                     <h3>Entry Fee</h3>
-                    <p>{pageant.entryFee || formatCurrency(75)}</p>
+                    <p>{formatCurrency(pageant.entryFee || 75)}</p>
                   </div>
                 </div>
               </div>
@@ -561,7 +596,7 @@ const PageantDetailsModal = ({ pageant, isOpen, onClose }) => {
                 <div className="results-summary">
                   <h4>Summary</h4>
                   <p>
-                    You competed in {pageant.categories.length} categories and achieved an overall placement of 
+                    You competed in {categories.length} categories and achieved an overall placement of 
                     {' '}{pageant.overallPlacement}{getOrdinalSuffix(pageant.overallPlacement)} place. 
                     {pageant.overallPlacement <= 3 ? 
                       ' Congratulations on your outstanding performance!' : 
@@ -584,18 +619,28 @@ const PageantDetailsModal = ({ pageant, isOpen, onClose }) => {
                       </tr>
                     </thead>
                     <tbody>
-                      {pageant.categories.map((cat, index) => (
-                        <tr key={index}>
-                          <td>{typeof cat === 'string' ? cat : cat.category}</td>
-                          <td className={`text-center ${getPlacementColor(cat.placement)}`}>
-                            {cat.placement ? `${cat.placement}${getOrdinalSuffix(cat.placement)}` : '--'}
-                          </td>
-                          <td className="text-center">{cat.score ? cat.score.toFixed(1) : '--'}</td>
-                          <td className="comments-cell">
-                            {cat.notes || getRandomComment(cat.category, cat.placement)}
-                          </td>
-                        </tr>
-                      ))}
+                      {categories.map((categoryName, index) => {
+                        const categoryObj = typeof pageant.categories[index] === 'object' 
+                          ? pageant.categories[index] 
+                          : { category: categoryName };
+                        
+                        return (
+                          <tr key={index}>
+                            <td>{categoryName}</td>
+                            <td className={`text-center ${getPlacementColor(categoryObj.placement)}`}>
+                              {categoryObj.placement 
+                                ? `${categoryObj.placement}${getOrdinalSuffix(categoryObj.placement)}` 
+                                : '--'}
+                            </td>
+                            <td className="text-center">
+                              {categoryObj.score ? categoryObj.score.toFixed(1) : '--'}
+                            </td>
+                            <td className="comments-cell">
+                              {categoryObj.notes || getRandomComment(categoryName, categoryObj.placement)}
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
@@ -674,54 +719,6 @@ const getCategoryDescription = (category) => {
   return descriptions[category] || 'Showcase your skills and talents in this exciting category.';
 };
 
-const getCategoryRequirements = (category) => {
-  const requirements = {
-    'Evening Gown': [
-      'Floor-length formal gown',
-      'Appropriate undergarments',
-      'Formal footwear (heels recommended)',
-      'Minimal and tasteful accessories'
-    ],
-    'Talent': [
-      'Performance limited to 90 seconds',
-      'Props must be approved in advance',
-      'Background music on USB drive in MP3 format',
-      'Technical requirements submitted by deadline'
-    ],
-    'Interview': [
-      'Professional attire (business suit or dress)',
-      'Resume/bio submitted in advance',
-      'Be prepared to discuss current events',
-      'Research pageant organization and sponsors'
-    ],
-    'Swimwear': [
-      'One-piece or two-piece swimsuit (age-appropriate)',
-      'Cover-up for before/after presentation',
-      'No excessive jewelry',
-      'Appropriate footwear (heels or sandals)'
-    ],
-    'Formal Wear': [
-      'Floor-length formal attire',
-      'Age-appropriate design',
-      'Proper fit and alterations',
-      'Practice walking and turning in outfit'
-    ],
-    'Winter Theme Costume': [
-      'Original costume design',
-      'Written description of concept',
-      'Safe construction (no hazardous elements)',
-      'Must be able to walk and move independently'
-    ]
-  };
-  
-  return requirements[category] || [
-    'Review category guidelines in contestant handbook',
-    'Submit required forms by deadline',
-    'Follow age-appropriate standards',
-    'Prepare according to pageant theme'
-  ];
-};
-
 const getCategoryCriteria = (category) => {
   const criteria = {
     'Evening Gown': ['Poise and grace (30%)', 'Stage presence (25%)', 'Overall appearance (25%)', 'Confidence (20%)'],
@@ -742,7 +739,7 @@ const getCategoryCriteria = (category) => {
 const getCategoryTips = (category) => {
   const tips = {
     'Evening Gown': 'Practice your walk and turns. Choose a gown that complements your body type and personal style.',
-    'Talent': 'Choose something youre passionate about and practice regularly. Keep your performance within the time limit.',
+    'Talent': 'Choose something you\'re passionate about and practice regularly. Keep your performance within the time limit.',
     'Interview': 'Stay informed about current events. Practice answering questions concisely and thoughtfully.',
     'Swimwear': 'Focus on confidence and posture. Choose a swimsuit that makes you feel comfortable and confident.',
     'Casual Wear': 'Select an outfit that reflects your personal style while remaining appropriate for the pageant.',
@@ -750,7 +747,7 @@ const getCategoryTips = (category) => {
     'Winter Theme Costume': 'Be creative and original with your design while ensuring you can move comfortably.',
     'Question and Answer': 'Practice speaking clearly and concisely. Have a friend ask you unexpected questions to prepare.',
     'Photogenic': 'Choose photographs that capture your natural beauty and personality. Professional photos are recommended.',
-    'On-Stage Question': 'Listen carefully to the question before answering. Its okay to take a moment to gather your thoughts.',
+    'On-Stage Question': 'Listen carefully to the question before answering. It\'s okay to take a moment to gather your thoughts.',
     'Personality Interview': 'Be authentic and let your personality shine through. Smile and maintain eye contact.',
     'Nature Talent': 'Incorporate natural elements or environmental themes into your performance for added impact.',
     'Floral Couture': 'Consider both aesthetics and practicality in your design. Ensure your outfit is secure and comfortable.',
@@ -758,44 +755,6 @@ const getCategoryTips = (category) => {
   };
   
   return tips[category] || 'Prepare thoroughly and showcase your authentic self. Confidence is key to success in this category.';
-};
-
-const getCategoryChecklist = (category) => {
-  const baseChecklist = [
-    'Review category guidelines',
-    'Prepare outfit/materials',
-    'Practice presentation',
-    'Pack backup items'
-  ];
-  
-  const specificChecklist = {
-    'Evening Gown': [
-      'Alterations completed',
-      'Shoes broken in',
-      'Jewelry selected',
-      'Practice walking in gown'
-    ],
-    'Talent': [
-      'Music/background track ready',
-      'Props prepared',
-      'Costume finalized',
-      'Full run-through practiced'
-    ],
-    'Interview': [
-      'Research current events',
-      'Practice common questions',
-      'Outfit selected and fitted',
-      'Resume submitted'
-    ],
-    'Swimwear': [
-      'Swimsuit selected and fitted',
-      'Cover-up prepared',
-      'Shoes selected',
-      'Self-tanning (if desired)'
-    ]
-  };
-  
-  return specificChecklist[category] || baseChecklist;
 };
 
 const getPlacementClass = (placement) => {
@@ -840,17 +799,6 @@ const getRandomComment = (category, placement) => {
   } else {
     return averageComments[Math.floor(Math.random() * averageComments.length)];
   }
-};
-
-const getDocumentDescription = (documentName) => {
-  const descriptions = {
-    'Contestant Information Packet': 'Comprehensive guide to the pageant including schedule, rules, and expectations.',
-    'Schedule & Itinerary': 'Detailed timeline of all pageant events, locations, and times.',
-    'Pageant Rules & Guidelines': 'Official rules, judging criteria, and code of conduct for all contestants.',
-    'Venue Map': 'Layout of the competition venue with key locations marked.'
-  };
-  
-  return descriptions[documentName] || 'Important document for pageant contestants.';
 };
 
 PageantDetailsModal.propTypes = {

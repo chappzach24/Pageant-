@@ -112,6 +112,10 @@ const ContestantDashboardHome = () => {
     }
   }, [user]);
 
+  useEffect(() => {
+    console.log("active", upcomingPageants);
+  })
+
   // Debugging function to check data structure
   const debugParticipantData = (participants) => {
     console.log('=========== DEBUGGING PARTICIPANT DATA ===========');
@@ -206,7 +210,7 @@ const ContestantDashboardHome = () => {
     // Defensive check
     if (!pageant) return null;
     
-    // Handle the organization property specifically to prevent the object rendering issue
+    // Handle the organization property specifically
     let organizationName = '';
     
     if (pageant.organization) {
@@ -218,12 +222,10 @@ const ContestantDashboardHome = () => {
       }
     }
     
-    // Create a clean object with proper string values instead of nested objects
-    // Focus on the fields actually used in the modal
+    // Create a clean object with proper values
     return {
       _id: pageant._id || '',
       name: pageant.name || 'Untitled Pageant',
-      // Convert organization to a simple string
       organization: organizationName,
       description: pageant.description || '',
       startDate: pageant.startDate || '',
@@ -237,10 +239,16 @@ const ContestantDashboardHome = () => {
       },
       status: pageant.status || '',
       registrationDeadline: pageant.registrationDeadline || '',
-      entryFee: {
-        amount: pageant.entryFee?.amount || 0,
-        currency: pageant.entryFee?.currency || 'USD'
-      },
+      // Properly preserve the entryFee object structure
+      entryFee: pageant.entryFee 
+        ? {
+            amount: pageant.entryFee.amount || 0,
+            currency: pageant.entryFee.currency || 'USD'
+          }
+        : {
+            amount: 0,
+            currency: 'USD'
+          },
       ageGroups: Array.isArray(pageant.ageGroups) ? pageant.ageGroups : [],
       categories: Array.isArray(pageant.categories) 
         ? pageant.categories.map(cat => {
@@ -263,7 +271,7 @@ const ContestantDashboardHome = () => {
   
   // Then update your openPageantDetails function to use this helper:
   const openPageantDetails = (pageant) => {
-    console.log('Opening pageant details for:', pageant.name);
+    console.log('Opening pageant details for:', pageant);
     
     // Use the helper to clean the pageant object
     const cleanPageant = preparePageantForModal(pageant);
