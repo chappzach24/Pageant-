@@ -37,6 +37,56 @@ const PageantDetailsModal = ({ pageant, isOpen, onClose }) => {
   // Return null if modal shouldn't be shown or no pageant data
   if (!isOpen || !pageant) return null;
 
+  // Safely get property from potentially null/undefined nested objects
+  const getSafe = (obj, path, defaultValue = '') => {
+    if (!obj) return defaultValue;
+    
+    const keys = path.split('.');
+    let current = obj;
+    
+    for (const key of keys) {
+      if (current === null || current === undefined) return defaultValue;
+      current = current[key];
+    }
+    
+    return current !== null && current !== undefined ? current : defaultValue;
+  };
+
+  // Safe render for potentially problematic data
+  const SafeRender = ({ value, fallback = '' }) => {
+    if (value === null || value === undefined) {
+      return <>{fallback}</>;
+    }
+    
+    if (typeof value === 'object') {
+      return <>{JSON.stringify(value)}</>;
+    }
+    
+    return <>{value}</>;
+  };
+
+  // Create safe getters for the pageant object
+  const getName = () => getSafe(pageant, 'name', 'Untitled Pageant');
+  const getOrganizationName = () => {
+    const org = pageant.organization;
+    if (!org) return 'Unknown Organization';
+    
+    if (typeof org === 'string') return org;
+    if (typeof org === 'object' && org.name) return org.name;
+    if (typeof org === 'object' && org._id && typeof org._id === 'object' && org._id.name) {
+      return org._id.name;
+    }
+    
+    return 'Unknown Organization';
+  };
+
+  // Other getter functions for safe access to pageant properties
+  const getStartDate = () => getSafe(pageant, 'startDate');
+  const getEndDate = () => getSafe(pageant, 'endDate');
+  const getVenue = () => getSafe(pageant, 'location.venue', 'Online');
+  const getCity = () => getSafe(pageant, 'location.address.city', '');
+  const getState = () => getSafe(pageant, 'location.address.state', '');
+
   // Format date to a readable format
   const formatDate = (dateString) => {
     if (!dateString) return 'TBD';
@@ -208,6 +258,30 @@ const PageantDetailsModal = ({ pageant, isOpen, onClose }) => {
     { name: 'Venue Map', type: 'PDF', size: '0.3 MB', date: '2025-02-10' }
   ];
 
+  // Safe getter for string values, prevents rendering objects directly
+  const getStringValue = (value, defaultValue = '') => {
+    if (value === null || value === undefined) {
+      return defaultValue;
+    }
+    
+    if (typeof value === 'string') {
+      return value;
+    }
+    
+    if (typeof value === 'object') {
+      // Convert object to string to prevent direct rendering
+      try {
+        return JSON.stringify(value);
+      } catch (e) {
+        console.error('Error stringifying object:', e);
+        return defaultValue;
+      }
+    }
+    
+    // For other types like numbers, booleans
+    return String(value);
+  };
+
   return (
     <div className="pageant-details-modal-backdrop" onClick={onClose}>
       <div className="pageant-details-modal" onClick={e => e.stopPropagation()}>
@@ -215,7 +289,7 @@ const PageantDetailsModal = ({ pageant, isOpen, onClose }) => {
         <div className="modal-header">
           <div>
             <h2 className="modal-title">{pageant.name}</h2>
-            <p className="modal-subtitle">{pageant.organization}</p>
+            <p className="modal-subtitle">{getStringValue(pageant.organization)}</p>
           </div>
           <button className="close-button" onClick={onClose}>&times;</button>
         </div>
@@ -313,7 +387,7 @@ const PageantDetailsModal = ({ pageant, isOpen, onClose }) => {
                   </div>
                   <div className="info-details">
                     <h3>Organized By</h3>
-                    <p>{pageant.organization}</p>
+                    <p>{getStringValue(pageant.organization)}</p>
                   </div>
                 </div>
                 

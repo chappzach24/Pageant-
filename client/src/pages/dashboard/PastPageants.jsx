@@ -1,4 +1,4 @@
-// client/src/pages/dashboard/PastPageants.jsx
+// Updated PastPageants.jsx
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -7,8 +7,8 @@ import {
   faExclamationTriangle, 
   faFilter,
   faSearch,
-  faHistory,
   faSort,
+  faHistory,
   faFire,
   faMedal,
   faEye
@@ -409,6 +409,6 @@ const PastPageants = () => {
       )}
     </div>
   );
-};
+}
 
 export default PastPageants;

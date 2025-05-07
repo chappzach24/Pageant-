@@ -1,4 +1,4 @@
-// client/src/pages/dashboard/ContestantDashboardHome.jsx
+// Updated ContestantDashboardHome.jsx
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -10,9 +10,12 @@ import {
   faExclamationTriangle,
   faUsers,
   faHistory,
-  faFire
+  faFire,
+  faEye
 } from '@fortawesome/free-solid-svg-icons';
 import PageantCard from './PageantCard';
+import PageantDetailsModal from '../../components/dashboard/PageantDetailsModal';
+import ErrorBoundary from '../../components/ErrorBoundary';
 import '../../css/myPageants.css';
 import '../../css/pageantCard.css';
 
@@ -22,6 +25,10 @@ const ContestantDashboardHome = () => {
   const [activePageants, setActivePageants] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  // Added states for modal
+  const [selectedPageant, setSelectedPageant] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchContestantData = async () => {
@@ -147,6 +154,150 @@ const ContestantDashboardHome = () => {
     const options = { year: 'numeric', month: 'long', day: 'numeric' };
     return new Date(dateString).toLocaleDateString(undefined, options);
   };
+  
+  // Add this at the top of your ContestantDashboardHome.jsx file
+  const debugPageantObject = (pageant) => {
+    console.log('Pageant object structure:', JSON.stringify(pageant, null, 2));
+    
+    // Check for circular references or non-serializable values
+    const seen = new WeakSet();
+    const detectCircular = (obj, path = '') => {
+      if (obj && typeof obj === 'object') {
+        if (seen.has(obj)) {
+          console.warn(`Circular reference detected at ${path}`);
+          return true;
+        }
+        seen.add(obj);
+        
+        for (const key in obj) {
+          if (detectCircular(obj[key], `${path}.${key}`)) {
+            return true;
+          }
+        }
+      }
+      return false;
+    };
+    
+    detectCircular(pageant);
+    
+    // Check for any DOM elements accidentally in the object
+    const detectDOM = (obj, path = '') => {
+      if (obj && typeof obj === 'object') {
+        if (obj instanceof HTMLElement) {
+          console.warn(`DOM element found at ${path}`);
+          return true;
+        }
+        
+        for (const key in obj) {
+          if (detectDOM(obj[key], `${path}.${key}`)) {
+            return true;
+          }
+        }
+      }
+      return false;
+    };
+    
+    detectDOM(pageant);
+    
+    return pageant;
+  };
+
+  const preparePageantForModal = (pageant) => {
+    // Defensive check
+    if (!pageant) return null;
+    
+    // Handle the organization property specifically to prevent the object rendering issue
+    let organizationName = '';
+    
+    if (pageant.organization) {
+      if (typeof pageant.organization === 'string') {
+        organizationName = pageant.organization;
+      } else if (typeof pageant.organization === 'object') {
+        // Extract the name property or use a default
+        organizationName = pageant.organization.name || 'Unknown Organization';
+      }
+    }
+    
+    // Create a clean object with proper string values instead of nested objects
+    // Focus on the fields actually used in the modal
+    return {
+      _id: pageant._id || '',
+      name: pageant.name || 'Untitled Pageant',
+      // Convert organization to a simple string
+      organization: organizationName,
+      description: pageant.description || '',
+      startDate: pageant.startDate || '',
+      endDate: pageant.endDate || '',
+      location: {
+        venue: pageant.location?.venue || '',
+        address: {
+          city: pageant.location?.address?.city || '',
+          state: pageant.location?.address?.state || ''
+        }
+      },
+      status: pageant.status || '',
+      registrationDeadline: pageant.registrationDeadline || '',
+      entryFee: {
+        amount: pageant.entryFee?.amount || 0,
+        currency: pageant.entryFee?.currency || 'USD'
+      },
+      ageGroups: Array.isArray(pageant.ageGroups) ? pageant.ageGroups : [],
+      categories: Array.isArray(pageant.categories) 
+        ? pageant.categories.map(cat => {
+            if (typeof cat === 'string') {
+              return { category: cat };
+            } else if (typeof cat === 'object') {
+              return {
+                category: cat.category || cat.name || 'Unknown Category',
+                score: cat.score || null,
+                placement: cat.placement || null
+              };
+            }
+            return { category: 'Unknown Category' };
+          }) 
+        : [],
+      overallPlacement: pageant.overallPlacement || null,
+      competitionYear: pageant.competitionYear || new Date().getFullYear()
+    };
+  };
+  
+  // Then update your openPageantDetails function to use this helper:
+  const openPageantDetails = (pageant) => {
+    console.log('Opening pageant details for:', pageant.name);
+    
+    // Use the helper to clean the pageant object
+    const cleanPageant = preparePageantForModal(pageant);
+    
+    setSelectedPageant(cleanPageant);
+    setIsModalOpen(true);
+    
+    // Prevent scrolling on the body while modal is open
+    document.body.style.overflow = 'hidden';
+  };
+
+  // Close modal
+  const closePageantDetails = () => {
+    setIsModalOpen(false);
+    setSelectedPageant(null);
+    
+    // Restore scrolling
+    document.body.style.overflow = 'auto';
+  };
+
+  // Custom renderer for the View Details button in PageantCard
+  const renderViewDetailsButton = (pageant) => (
+    <button 
+      className="btn btn-outline-primary w-100"
+      onClick={(e) => {
+        e.preventDefault(); // Prevent any default anchor behavior
+        e.stopPropagation(); // Prevent event bubbling
+        openPageantDetails(pageant);
+      }}
+    >
+      <FontAwesomeIcon icon={faEye} className="me-2" />
+      View Details
+    </button>
+  );
 
   return (
     <div className="dashboard-home">
@@ -227,6 +378,7 @@ const ContestantDashboardHome = () => {
                       type="active"
                       showCategories={true}
                       className={`delay-${index % 6}`}
+                      renderActions={() => renderViewDetailsButton(participation.pageant)}
                     />
                   </div>
                 ))}
@@ -255,6 +407,7 @@ const ContestantDashboardHome = () => {
                       type="active"
                       showCategories={true}
                       className={`delay-${index % 6}`}
+                      renderActions={() => renderViewDetailsButton(participation.pageant)}
                     />
                   </div>
                 ))}
@@ -263,7 +416,38 @@ const ContestantDashboardHome = () => {
           </div>
         </>
       )}
-    </div>
+      
+      {/* PageantDetailsModal */}
+      {isModalOpen && (
+        <PageantDetailsModal 
+          pageant={selectedPageant}
+          isOpen={isModalOpen}
+          onClose={closePageantDetails}
+        />
+      )}
+
+      {/* PageantDetailsModal with Error Boundary */}
+      {isModalOpen && (
+        <ErrorBoundary fallback={
+          <div className="alert alert-danger">
+            <h4>Error displaying pageant details</h4>
+            <p>There was a problem showing the pageant information. Please try again later.</p>
+            <button 
+              className="btn btn-secondary mt-3"
+              onClick={closePageantDetails}
+            >
+              Close
+            </button>
+          </div>
+        }>
+          <PageantDetailsModal 
+            pageant={selectedPageant}
+            isOpen={isModalOpen}
+            onClose={closePageantDetails}
+          />
+        </ErrorBoundary>
+      )}
+      </div>
   );
 };
 
