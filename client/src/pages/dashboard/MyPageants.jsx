@@ -1,4 +1,4 @@
-// Updated MyPageants.jsx
+// Updated MyPageants.jsx with real API data fetching
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -7,7 +7,8 @@ import {
   faExclamationTriangle, 
   faFilter,
   faSearch,
-  faEye
+  faEye,
+  faSpinner
 } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '../../context/AuthContext';
 import PageantCard from './PageantCard';
@@ -27,108 +28,81 @@ const MyPageants = () => {
   const [selectedPageant, setSelectedPageant] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Mock data for frontend development
-  const mockPageants = [
-    {
-      _id: 'p1',
-      name: 'Summer Elegance 2025',
-      organization: 'Coastal Pageants Inc.',
-      startDate: '2025-06-15T00:00:00.000Z',
-      endDate: '2025-06-20T00:00:00.000Z',
-      location: {
-        venue: 'Oceanview Convention Center',
-        address: {
-          city: 'Miami',
-          state: 'FL'
-        }
-      },
-      status: 'published',
-      categories: ['Evening Gown', 'Talent', 'Interview']
-    },
-    {
-      _id: 'p2',
-      name: 'Winter Wonderland Pageant',
-      organization: 'Northern Lights Productions',
-      startDate: '2025-05-05T00:00:00.000Z', // Closer date for testing
-      endDate: '2025-05-07T00:00:00.000Z',
-      location: {
-        venue: 'Crystal Palace',
-        address: {
-          city: 'Chicago',
-          state: 'IL'
-        }
-      },
-      status: 'published',
-      categories: ['Formal Wear', 'Winter Theme Costume', 'Question and Answer']
-    },
-    {
-      _id: 'p3',
-      name: 'National Junior Superstar',
-      organization: 'Starlight Events',
-      startDate: '2025-04-26T00:00:00.000Z', // Very close date for testing
-      endDate: '2025-04-28T00:00:00.000Z',
-      location: {
-        venue: 'Grand Ballroom',
-        address: {
-          city: 'Dallas',
-          state: 'TX'
-        }
-      },
-      status: 'in-progress',
-      categories: ['Casual Wear', 'Talent Showcase', 'Personality Interview']
-    },
-    {
-      _id: 'p4',
-      name: 'Spring Blossom Pageant',
-      organization: 'Garden Events',
-      startDate: '2025-04-19T00:00:00.000Z', // Use today's date to show in-progress
-      endDate: '2025-04-21T00:00:00.000Z',
-      location: {
-        venue: 'Botanical Gardens',
-        address: {
-          city: 'Portland',
-          state: 'OR'
-        }
-      },
-      status: 'in-progress',
-      categories: ['Floral Couture', 'Nature Talent', 'Environmental Q&A']
-    }
-  ];
-
+  // Fetch participant data from the API
   useEffect(() => {
-    // In a real implementation, this would be an API call to fetch the user's pageants
-    const fetchPageants = async () => {
+    const fetchParticipantData = async () => {
       try {
         setIsLoading(true);
+        setError(null);
         
-        // Simulate API delay
-        setTimeout(() => {
-          setPageants(mockPageants);
-          setFilteredPageants(mockPageants);
-          setIsLoading(false);
-        }, 1000);
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/participants`, {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+          },
+          credentials: 'include'
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch your pageant registrations');
+        }
+
+        const data = await response.json();
+        
+        if (data.success && data.participants) {
+          console.log('API returned pageant data:', data.participants);
+          
+          // Process the participants data to extract pageant information
+          const processedPageants = processPageantData(data.participants);
+          setPageants(processedPageants);
+          setFilteredPageants(processedPageants);
+        } else {
+          throw new Error('Failed to get participation data from server');
+        }
       } catch (err) {
         console.error('Error fetching pageants:', err);
         setError('Failed to load your pageants. Please try again later.');
+      } finally {
         setIsLoading(false);
       }
     };
 
     if (user) {
-      fetchPageants();
+      fetchParticipantData();
     }
   }, [user]);
 
+  // Process the participant data to extract pageant information
+  const processPageantData = (participants) => {
+    if (!participants || !Array.isArray(participants)) {
+      return [];
+    }
+    
+    return participants.map(participant => {
+      // Extract pageant info from the participant object
+      const pageantInfo = participant.pageant;
+      
+      // Add the contestant's categories to the pageant object
+      const pageantWithCategories = {
+        ...pageantInfo,
+        categories: participant.categories.map(cat => cat.category)
+      };
+      
+      return pageantWithCategories;
+    });
+  };
+
+  // Filter pageants based on search term and status
   useEffect(() => {
-    // Filter pageants based on search term and status
     if (pageants.length) {
       let filtered = [...pageants];
       
       // Filter by search term
       if (searchTerm) {
         filtered = filtered.filter(p => 
-          p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          p.organization.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          p.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (typeof p.organization === 'string' && p.organization.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (typeof p.organization === 'object' && p.organization?.name?.toLowerCase().includes(searchTerm.toLowerCase())) ||
           (p.location?.venue && p.location.venue.toLowerCase().includes(searchTerm.toLowerCase()))
         );
       }
@@ -136,7 +110,10 @@ const MyPageants = () => {
       // Filter by status
       const today = new Date();
       if (filterStatus === 'upcoming') {
-        filtered = filtered.filter(p => new Date(p.startDate) > today);
+        filtered = filtered.filter(p => {
+          const startDate = new Date(p.startDate);
+          return startDate > today;
+        });
       } else if (filterStatus === 'in-progress') {
         filtered = filtered.filter(p => {
           const startDate = new Date(p.startDate);
@@ -156,9 +133,78 @@ const MyPageants = () => {
     }
   }, [pageants, searchTerm, filterStatus]);
 
+  // Prepare pageant data for the modal
+  const preparePageantForModal = (pageant) => {
+    // Defensive check
+    if (!pageant) return null;
+    
+    // Handle the organization property specifically to prevent object rendering issues
+    let organizationName = '';
+    
+    if (pageant.organization) {
+      if (typeof pageant.organization === 'string') {
+        organizationName = pageant.organization;
+      } else if (typeof pageant.organization === 'object') {
+        // Extract the name property or use a default
+        organizationName = pageant.organization.name || 'Unknown Organization';
+      }
+    }
+    
+    // Create a clean object with proper values
+    return {
+      _id: pageant._id || '',
+      name: pageant.name || 'Untitled Pageant',
+      organization: organizationName,
+      description: pageant.description || '',
+      startDate: pageant.startDate || '',
+      endDate: pageant.endDate || '',
+      location: {
+        venue: pageant.location?.venue || '',
+        address: {
+          city: pageant.location?.address?.city || '',
+          state: pageant.location?.address?.state || ''
+        }
+      },
+      status: pageant.status || '',
+      registrationDeadline: pageant.registrationDeadline || '',
+      // Properly preserve the entryFee object structure
+      entryFee: pageant.entryFee 
+        ? {
+            amount: pageant.entryFee.amount || 0,
+            currency: pageant.entryFee.currency || 'USD'
+          }
+        : {
+            amount: 0,
+            currency: 'USD'
+          },
+      ageGroups: Array.isArray(pageant.ageGroups) ? pageant.ageGroups : [],
+      categories: Array.isArray(pageant.categories) 
+        ? pageant.categories.map(cat => {
+            if (typeof cat === 'string') {
+              return { category: cat };
+            } else if (typeof cat === 'object') {
+              return {
+                category: cat.category || cat.name || 'Unknown Category',
+                score: cat.score || null,
+                placement: cat.placement || null
+              };
+            }
+            return { category: 'Unknown Category' };
+          }) 
+        : [],
+      overallPlacement: pageant.overallPlacement || null,
+      competitionYear: pageant.competitionYear || new Date().getFullYear()
+    };
+  };
+
   // Open modal with selected pageant details
   const openPageantDetails = (pageant) => {
-    setSelectedPageant(pageant);
+    console.log('Opening pageant details for:', pageant.name);
+    
+    // Use the helper to clean the pageant object
+    const cleanPageant = preparePageantForModal(pageant);
+    
+    setSelectedPageant(cleanPageant);
     setIsModalOpen(true);
     
     // Prevent scrolling on the body while modal is open
@@ -248,18 +294,19 @@ const MyPageants = () => {
         </div>
       ) : error ? (
         <div className="alert alert-danger" role="alert">
+          <FontAwesomeIcon icon={faExclamationTriangle} className="me-2" />
           {error}
         </div>
       ) : filteredPageants.length === 0 ? (
         <div className="alert alert-info" role="alert">
           <FontAwesomeIcon icon={faExclamationTriangle} className="me-2" />
-          No pageants found matching your criteria. Try adjusting your search or filter.
+          No pageants found. You haven't registered for any pageants yet, or none match your current filters.
         </div>
       ) : (
         <div className="pageants-grid">
           <div className="row g-4">
             {filteredPageants.map((pageant, index) => (
-              <div className="col-md-6 col-lg-4" key={pageant._id}>
+              <div className="col-md-6 col-lg-4" key={pageant._id || index}>
                 <PageantCard 
                   pageant={pageant} 
                   type="active" 
