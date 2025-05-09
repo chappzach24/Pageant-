@@ -91,6 +91,10 @@ const PageantSchema = new mongoose.Schema({
       required: true
     },
     description: String,
+    price: {
+      type: Number,
+      default: 0
+    },
     scoringCriteria: [{
       name: String,
       description: String,
