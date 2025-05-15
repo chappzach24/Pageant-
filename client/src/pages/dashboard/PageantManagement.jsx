@@ -15,6 +15,7 @@ import {
   faExclamationTriangle,
 } from "@fortawesome/free-solid-svg-icons";
 import OrgPageantDetailsModal from "../../components/dashboard/OrgPageantDetailsModal";
+import EditPageantModal from "../../components/dashboard/EditPageantModal";
 
 const PageantManagement = () => {
   const { organizationId } = useParams();
@@ -27,6 +28,9 @@ const PageantManagement = () => {
 
   const [selectedPageant, setSelectedPageant] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [pageantToEdit, setPageantToEdit] = useState(null);
 
   // Filtering and sorting
   const [searchTerm, setSearchTerm] = useState("");
@@ -107,6 +111,54 @@ const PageantManagement = () => {
 
   const navigateToEditPageant = (pageantId) => {
     navigate(`/organization-dashboard/pageants/${pageantId}/edit`);
+  };
+
+  // Function to open the edit modal
+  const handleEditPageant = (pageant) => {
+    setPageantToEdit(pageant);
+    setEditModalOpen(true);
+  };
+
+  // Function to handle saving the edited pageant
+  const handleSavePageant = async (formData) => {
+    try {
+      // Make API request to update the pageant
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/pageants/${pageantToEdit._id}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify(formData)
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update pageant');
+      }
+
+      const data = await response.json();
+      
+      // Update the pageants list with the updated pageant
+      setPageants(prevPageants => 
+        prevPageants.map(p => p._id === pageantToEdit._id ? data.pageant : p)
+      );
+      
+      // Close the modal
+      setEditModalOpen(false);
+      setPageantToEdit(null);
+      
+      // Show success message or notification
+      // ...
+    } catch (error) {
+      console.error('Error updating pageant:', error);
+      // Handle error (you might want to propagate this to the modal component)
+      throw error;
+    }
   };
 
   // Filter and sort pageants
@@ -470,11 +522,7 @@ const PageantManagement = () => {
                       </button>
                       <button
                         className="btn btn-sm btn-outline-secondary"
-                        onClick={() =>
-                          navigate(
-                            `/organization-dashboard/pageants/${pageant._id}/edit`
-                          )
-                        }
+                        onClick={() => handleEditPageant(pageant)}
                         title="Edit Pageant"
                       >
                         <FontAwesomeIcon icon={faEdit} />
@@ -501,6 +549,19 @@ const PageantManagement = () => {
           onClose={closePageantDetails}
           onEdit={navigateToEditPageant}
           orgName={organization.name}
+        />
+      )}
+
+      {/* Edit Modal */}
+      {editModalOpen && pageantToEdit && (
+        <EditPageantModal 
+          pageant={pageantToEdit}
+          isOpen={editModalOpen}
+          onClose={() => {
+            setEditModalOpen(false);
+            setPageantToEdit(null);
+          }}
+          onSave={handleSavePageant}
         />
       )}
     </div>

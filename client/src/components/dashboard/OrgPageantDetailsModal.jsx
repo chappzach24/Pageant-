@@ -109,7 +109,8 @@ const OrgPageantDetailsModal = ({ pageant, isOpen, onClose, onEdit, orgName }) =
         <div className="modal-content" style={{
           maxHeight: '90vh',
           display: 'flex',
-          flexDirection: 'column'
+          flexDirection: 'column',
+          borderRadius: '0.5rem',
         }}>
           {/* Modal Header */}
           <div className="modal-header">
@@ -323,7 +324,7 @@ const OrgPageantDetailsModal = ({ pageant, isOpen, onClose, onEdit, orgName }) =
                   </div>
                 </div>
                 
-                <div className="d-flex justify-content-end mt-3">
+                {/*<div className="d-flex justify-content-end mt-3">
                   {onEdit && (
                     <button 
                       className="btn btn-primary" 
@@ -332,8 +333,8 @@ const OrgPageantDetailsModal = ({ pageant, isOpen, onClose, onEdit, orgName }) =
                       <FontAwesomeIcon icon={faEdit} className="me-2" />
                       Edit Pageant
                     </button>
-                  )}
-                </div>
+                  )} 
+                </div>*/}
               </div>
             )}
             
