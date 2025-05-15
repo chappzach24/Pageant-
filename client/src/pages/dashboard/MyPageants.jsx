@@ -1,4 +1,4 @@
-// Updated MyPageants.jsx with real API data fetching
+// client/src/pages/dashboard/MyPageants.jsx
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -8,7 +8,7 @@ import {
   faFilter,
   faSearch,
   faEye,
-  faSpinner
+  faCalendarAlt
 } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '../../context/AuthContext';
 import PageantCard from './PageantCard';
@@ -24,7 +24,6 @@ const MyPageants = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all'); // all, upcoming, in-progress
   const [selectedPageant, setSelectedPageant] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -55,7 +54,15 @@ const MyPageants = () => {
           // Process the participants data to extract pageant information
           const processedPageants = processPageantData(data.participants);
           setPageants(processedPageants);
-          setFilteredPageants(processedPageants);
+          
+          // Filter for upcoming pageants only
+          const today = new Date();
+          const upcomingPageants = processedPageants.filter(p => {
+            const startDate = new Date(p.startDate);
+            return startDate > today;
+          });
+          
+          setFilteredPageants(upcomingPageants);
         } else {
           throw new Error('Failed to get participation data from server');
         }
@@ -92,14 +99,19 @@ const MyPageants = () => {
     });
   };
 
-  // Filter pageants based on search term and status
+  // Filter pageants based on search term
   useEffect(() => {
     if (pageants.length) {
-      let filtered = [...pageants];
+      // Get only upcoming pageants
+      const today = new Date();
+      let upcoming = pageants.filter(p => {
+        const startDate = new Date(p.startDate);
+        return startDate > today;
+      });
       
-      // Filter by search term
+      // Then apply search filter if any
       if (searchTerm) {
-        filtered = filtered.filter(p => 
+        upcoming = upcoming.filter(p => 
           p.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
           (typeof p.organization === 'string' && p.organization.toLowerCase().includes(searchTerm.toLowerCase())) ||
           (typeof p.organization === 'object' && p.organization?.name?.toLowerCase().includes(searchTerm.toLowerCase())) ||
@@ -107,31 +119,16 @@ const MyPageants = () => {
         );
       }
       
-      // Filter by status
-      const today = new Date();
-      if (filterStatus === 'upcoming') {
-        filtered = filtered.filter(p => {
-          const startDate = new Date(p.startDate);
-          return startDate > today;
-        });
-      } else if (filterStatus === 'in-progress') {
-        filtered = filtered.filter(p => {
-          const startDate = new Date(p.startDate);
-          const endDate = new Date(p.endDate);
-          return startDate <= today && endDate >= today;
-        });
-      }
-      
       // Sort by closest start date to farthest
-      filtered.sort((a, b) => {
+      upcoming.sort((a, b) => {
         const dateA = new Date(a.startDate);
         const dateB = new Date(b.startDate);
         return dateA - dateB;
       });
       
-      setFilteredPageants(filtered);
+      setFilteredPageants(upcoming);
     }
-  }, [pageants, searchTerm, filterStatus]);
+  }, [pageants, searchTerm]);
 
   // Prepare pageant data for the modal
   const preparePageantForModal = (pageant) => {
@@ -235,12 +232,32 @@ const MyPageants = () => {
     </button>
   );
 
+  // Format date for display
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+    
+    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    return new Date(dateString).toLocaleDateString(undefined, options);
+  };
+
+  // Calculate days until pageant
+  const getDaysUntil = (startDate) => {
+    const today = new Date();
+    const pageantDate = new Date(startDate);
+    
+    // Calculate difference in days
+    const diffTime = pageantDate - today;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    return diffDays;
+  };
+
   return (
     <div className="active-pageants-container">
       <div className="page-header mb-4 d-flex justify-content-between align-items-center">
         <div>
-          <h2 className="u-text-dark mb-1">Active Pageants</h2>
-          <p className="u-text-dark">View all your registered pageants</p>
+          <h2 className="u-text-dark mb-1">My Upcoming Pageants</h2>
+          <p className="u-text-dark">View all your upcoming pageant registrations</p>
         </div>
         <Link to="/contestant-dashboard/join-pageant" className="btn btn-primary">
           <FontAwesomeIcon icon={faTrophy} className="me-2" />
@@ -248,11 +265,11 @@ const MyPageants = () => {
         </Link>
       </div>
 
-      {/* Search and Filter */}
+      {/* Search Bar */}
       <div className="card mb-4">
         <div className="card-body">
           <div className="row g-3">
-            <div className="col-md-8">
+            <div className="col-md-12">
               <div className="input-group">
                 <span className="input-group-text">
                   <FontAwesomeIcon icon={faSearch} />
@@ -260,26 +277,10 @@ const MyPageants = () => {
                 <input
                   type="text"
                   className="form-control"
-                  placeholder="Search pageants by name, organization, or location"
+                  placeholder="Search upcoming pageants by name, organization, or location"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
-              </div>
-            </div>
-            <div className="col-md-4">
-              <div className="input-group">
-                <span className="input-group-text">
-                  <FontAwesomeIcon icon={faFilter} />
-                </span>
-                <select
-                  className="form-select"
-                  value={filterStatus}
-                  onChange={(e) => setFilterStatus(e.target.value)}
-                >
-                  <option value="all">All Pageants</option>
-                  <option value="upcoming">Upcoming</option>
-                  <option value="in-progress">In Progress</option>
-                </select>
               </div>
             </div>
           </div>
@@ -300,7 +301,7 @@ const MyPageants = () => {
       ) : filteredPageants.length === 0 ? (
         <div className="alert alert-info" role="alert">
           <FontAwesomeIcon icon={faExclamationTriangle} className="me-2" />
-          No pageants found. You haven't registered for any pageants yet, or none match your current filters.
+          No upcoming pageants found. You haven't registered for any future pageants yet.
         </div>
       ) : (
         <div className="pageants-grid">
