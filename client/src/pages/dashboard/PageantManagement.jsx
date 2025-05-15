@@ -14,6 +14,7 @@ import {
   faTrash,
   faExclamationTriangle,
 } from "@fortawesome/free-solid-svg-icons";
+import OrgPageantDetailsModal from "../../components/dashboard/OrgPageantDetailsModal";
 
 const PageantManagement = () => {
   const { organizationId } = useParams();
@@ -23,6 +24,9 @@ const PageantManagement = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [organization, setOrganization] = useState(null);
+
+  const [selectedPageant, setSelectedPageant] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Filtering and sorting
   const [searchTerm, setSearchTerm] = useState("");
@@ -89,6 +93,21 @@ const PageantManagement = () => {
       fetchOrganizationAndPageants();
     }
   }, [organizationId]);
+
+  // Add these functions for managing the modal
+  const openPageantDetails = (pageant) => {
+    setSelectedPageant(pageant);
+    setIsModalOpen(true);
+  };
+
+  const closePageantDetails = () => {
+    setIsModalOpen(false);
+    setSelectedPageant(null);
+  };
+
+  const navigateToEditPageant = (pageantId) => {
+    navigate(`/organization-dashboard/pageants/${pageantId}/edit`);
+  };
 
   // Filter and sort pageants
   const getFilteredPageants = () => {
@@ -414,7 +433,7 @@ const PageantManagement = () => {
                       />
                       <div>
                         <div className="fw-bold">{pageant.name}</div>
-                        <small className="text-muted">ID: {pageant._id}</small>
+                        <small className="text-muted">ID: {pageant.pageantID}</small>
                       </div>
                     </div>
                   </td>
@@ -444,11 +463,7 @@ const PageantManagement = () => {
                     <div className="btn-group">
                       <button
                         className="btn btn-sm btn-outline-primary"
-                        onClick={() =>
-                          navigate(
-                            `/organization-dashboard/pageants/${pageant._id}/view`
-                          )
-                        }
+                        onClick={() => openPageantDetails(pageant)}
                         title="View Pageant Details"
                       >
                         <FontAwesomeIcon icon={faEye} />
@@ -478,6 +493,15 @@ const PageantManagement = () => {
             </tbody>
           </table>
         </div>
+      )}
+      {isModalOpen && (
+        <OrgPageantDetailsModal 
+          pageant={selectedPageant}
+          isOpen={isModalOpen}
+          onClose={closePageantDetails}
+          onEdit={navigateToEditPageant}
+          orgName={organization.name}
+        />
       )}
     </div>
   );
