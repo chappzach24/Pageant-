@@ -483,7 +483,7 @@ const ContestantPayments = () => {
               ) : getFilteredPayments().length === 0 ? (
                 <div className="p-5 text-center">
                   <FontAwesomeIcon icon={faExclamationTriangle} className="mb-3 text-warning" size="2x" />
-                  <p className="mb-0">No payment history found.</p>
+                  <p className="mb-0 u-text-dark">No payment history found.</p>
                 </div>
               ) : (
                 <div className="table-responsive">
@@ -649,8 +649,8 @@ const ContestantPayments = () => {
               <div className="card card-info">
                 <div className="card-body">
                   <h5 className="card-title">Payment Security</h5>
-                  <p>Your payment information is encrypted and securely stored. We never store your complete card details on our servers.</p>
-                  <p>When you add a new payment method, you're creating a secure token that can only be used for pageant-related transactions.</p>
+                  <p className='u-text-dark'>Your payment information is encrypted and securely stored. We never store your complete card details on our servers.</p>
+                  <p className='u-text-dark'>When you add a new payment method, you're creating a secure token that can only be used for pageant-related transactions.</p>
                   <div className="security-badges mt-3 text-center">
                     <FontAwesomeIcon icon={faLock} size="2x" className="text-secondary" />
                   </div>
