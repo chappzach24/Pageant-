@@ -47,7 +47,7 @@ const Signup = () => {
     
     try {
       await register(registerData);
-      navigate('/dashboard'); // Redirect to dashboard after registration
+      navigate('/organization-dashboard'); // Redirect to dashboard after registration
     } catch (error) {
       setErrorMessage(error.message || 'Registration failed. Please try again.');
     } finally {

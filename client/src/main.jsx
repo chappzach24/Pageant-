@@ -12,6 +12,7 @@ import ContestantSignup from "./pages/ContestantSignup.jsx";
 import ContestantLogin from "./pages/ContestantLogin.jsx";
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/auth/ProtectedRoute.jsx";
+import OrganizationOwnerCheck from "./components/auth/OrganizationOwnerCheck.jsx";
 
 // Contestant Dashboard Components
 import ContestantDashboardLayout from "./components/dashboard/ContestantDashboardLayout.jsx";
@@ -71,15 +72,22 @@ const router = createBrowserRouter([
                 index: true,
                 element: <OrganizationDashboardHome />,
               },
-              // Add pageant management routes
+              // Protected organization-specific routes - users can only access their own organizations
               {
-                path: "organizations/:organizationId/pageants",
-                element: <PageantManagement />,
+                path: "organizations/:organizationId",
+                element: <OrganizationOwnerCheck />,
+                children: [
+                  {
+                    path: "pageants",
+                    element: <PageantManagement />,
+                  },
+                  {
+                    path: "pageants/new",
+                    element: <AddPageant />,
+                  },
+                ],
               },
-              {
-                path: "organizations/:organizationId/pageants/new",
-                element: <AddPageant />,
-              },
+              // Protected pageant-specific routes
               {
                 path: "pageants/:pageantId/view",
                 element: <h1>View Pageant (Coming Soon)</h1>,

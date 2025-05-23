@@ -448,18 +448,13 @@ const OrganizationDashboardHome = () => {
         </div>
       ) : (
         <div className="py-3">
-          <div className="d-flex justify-content-between align-items-center mb-4">
-            <h2>Your Organizations</h2>
-            <button
-              className="btn btn-primary"
-              onClick={() => setShowCreateForm(true)}
-            >
-              <FontAwesomeIcon icon={faPlus} className="me-2" /> Create New
-              Organization
-            </button>
+          <div className="text-center mb-4">
+            <h2>Your Organization</h2>
+            {/* REMOVED: Create New Organization button - users can only have one organization */}
           </div>
 
-          {showCreateForm && renderForm()}
+          {/* Only show create form if user has no organizations (this shouldn't happen in this branch) */}
+          {organizations.length === 0 && showCreateForm && renderForm()}
 
           {error && <div className="alert alert-danger">{error}</div>}
 
