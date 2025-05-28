@@ -1,11 +1,12 @@
 import Button from "../global/Button";
+import heroImage from '../../assets/hero_image.jpeg'; // Add this import
 
 const CTASection = () => {
     return(
         <>
         <div className="cta-wrap min-vh-100 u-section-space-m position-relative d-flex flex-column justify-content-center">
             <div className="cta-image position-absolute w-100 h-100" style={{ top: '0', left: '0' }}>
-                <img src="../public/hero_image.jpeg" className="h-100 w-100" style={{transform: 'scaleX(-1)' }} alt="" />
+                <img src={heroImage} className="h-100 w-100" style={{transform: 'scaleX(-1)' }} alt="" />
             </div>
             <div className="cta-contain u-container">
                 <div className="cta-layout d-flex flex-column u-gap-m">

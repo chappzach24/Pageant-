@@ -6,6 +6,7 @@ import StepsSection from "../components/sections/StepsSection";
 import FAQSection from "../components/sections/FAQSection";
 import CTASection from "../components/sections/CTASection";
 import Footer from "../components/sections/Footer";
+import heroImage from '../assets/hero_image.jpeg';
 
 const Home = () => {
 
@@ -16,7 +17,7 @@ const Home = () => {
             {/* Hero Section */}
             <div className="hero-wrap position-relative vh-100 vw-100">
                 <div className="hero-img position-absolute h-100 w-100">
-                    <img src="../public/hero_image.jpeg" className="h-100 w-100" style={{transform: 'scaleX(-1)' }} alt="" />
+                    <img src={heroImage} className="h-100 w-100" style={{transform: 'scaleX(-1)' }} alt="" />
                 </div>
                 <div className="hero-contain u-container d-flex flex-column justify-content-center h-100">
                     <div className="hero-layout d-flex flex-column u-gap-m">
