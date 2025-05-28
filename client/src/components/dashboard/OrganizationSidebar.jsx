@@ -11,6 +11,10 @@ import {
   faChartBar,
   faUsers,
   faCog,
+  faGavel,
+  faFileAlt,
+  faBell,
+  faPlus
 } from "@fortawesome/free-solid-svg-icons";
 import { useAuth } from "../../context/AuthContext";
 
@@ -19,6 +23,7 @@ const OrganizationSidebar = ({ onToggle }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [organizations, setOrganizations] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [notifications, setNotifications] = useState(3); // Example notification count
   const location = useLocation();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -76,12 +81,49 @@ const OrganizationSidebar = ({ onToggle }) => {
       path: "/organization-dashboard",
       icon: faHome,
       text: "Dashboard",
+      exact: true
     },
     {
       path: "/organization-dashboard/organizations",
       icon: faBuilding,
       text: "My Organizations",
+      badge: organizations.length > 0 ? organizations.length : null
     },
+    {
+      path: "/organization-dashboard/pageants",
+      icon: faTrophy,
+      text: "All Pageants"
+    },
+    {
+      path: "/organization-dashboard/participants",
+      icon: faUsers,
+      text: "Participants"
+    },
+    {
+      path: "/organization-dashboard/judges",
+      icon: faGavel,
+      text: "Judges"
+    },
+    {
+      path: "/organization-dashboard/reports",
+      icon: faChartBar,
+      text: "Reports & Analytics"
+    }
+  ];
+
+  // Settings and system items
+  const systemItems = [
+    {
+      path: "/organization-dashboard/notifications",
+      icon: faBell,
+      text: "Notifications",
+      badge: notifications > 0 ? notifications : null
+    },
+    {
+      path: "/organization-dashboard/settings",
+      icon: faCog,
+      text: "Settings"
+    }
   ];
 
   const toggleSidebar = () => {
@@ -90,6 +132,14 @@ const OrganizationSidebar = ({ onToggle }) => {
 
   const toggleMobileSidebar = () => {
     setMobileOpen(!mobileOpen);
+  };
+
+  // Check if current path matches nav item
+  const isActiveNavItem = (item) => {
+    if (item.exact) {
+      return location.pathname === item.path;
+    }
+    return location.pathname.startsWith(item.path);
   };
 
   return (
@@ -199,11 +249,11 @@ const OrganizationSidebar = ({ onToggle }) => {
 
         {/* Main Navigation */}
         <nav className="sidebar-nav mt-3">
-          <div className="nav-section mb-2">
+          <div className="nav-section mb-3">
             {!collapsed && (
               <div className="nav-section-header px-3 mb-2">
                 <small className="text-uppercase text-light opacity-75">
-                  Main
+                  Main Menu
                 </small>
               </div>
             )}
@@ -216,27 +266,32 @@ const OrganizationSidebar = ({ onToggle }) => {
                   <Link
                     to={item.path}
                     className={`nav-link d-flex align-items-center py-3 px-3 ${
-                      location.pathname === item.path ? "active" : ""
+                      isActiveNavItem(item) ? "active" : ""
                     }`}
                     style={{
                       color: "var(--primary-color)",
                       textDecoration: "none",
-                      borderLeft:
-                        location.pathname === item.path
-                          ? "4px solid var(--brand-color)"
-                          : "4px solid transparent",
-                      backgroundColor:
-                        location.pathname === item.path
-                          ? "rgba(255,255,255,0.1)"
-                          : "transparent",
+                      borderLeft: isActiveNavItem(item)
+                        ? "4px solid var(--brand-color)"
+                        : "4px solid transparent",
+                      backgroundColor: isActiveNavItem(item)
+                        ? "rgba(255,255,255,0.1)"
+                        : "transparent",
                       transition: "all 0.3s ease",
                     }}
                   >
-                    <FontAwesomeIcon
-                      icon={item.icon}
-                      style={{ minWidth: "20px" }}
-                    />
-                    {!collapsed && <span className="ms-3">{item.text}</span>}
+                    <div className="d-flex align-items-center justify-content-between w-100">
+                      <div className="d-flex align-items-center">
+                        <FontAwesomeIcon
+                          icon={item.icon}
+                          style={{ minWidth: "20px" }}
+                        />
+                        {!collapsed && <span className="ms-3">{item.text}</span>}
+                      </div>
+                      {!collapsed && item.badge && (
+                        <span className="badge bg-primary ms-2">{item.badge}</span>
+                      )}
+                    </div>
                   </Link>
                 </li>
               ))}
@@ -245,23 +300,31 @@ const OrganizationSidebar = ({ onToggle }) => {
 
           {/* Organizations Section */}
           {!loading && organizations.length > 0 && (
-            <div className="nav-section mb-2">
+            <div className="nav-section mb-3">
               {!collapsed && (
-                <div className="nav-section-header px-3 mb-2">
+                <div className="nav-section-header px-3 mb-2 d-flex justify-content-between align-items-center">
                   <small className="text-uppercase text-light opacity-75">
-                    My Organizations
+                    Quick Access
                   </small>
+                  <Link 
+                    to="/organization-dashboard/organizations/new"
+                    className="btn btn-sm btn-outline-light"
+                    style={{ fontSize: '0.7rem', padding: '0.2rem 0.5rem' }}
+                    title="Create New Organization"
+                  >
+                    <FontAwesomeIcon icon={faPlus} />
+                  </Link>
                 </div>
               )}
               <ul
                 className="nav flex-column"
                 style={{ listStyle: "none", padding: 0 }}
               >
-                {organizations.map((org) => (
+                {organizations.slice(0, 3).map((org) => (
                   <li className="nav-item" key={org._id}>
                     <Link
                       to={`/organization-dashboard/organizations/${org._id}/pageants`}
-                      className={`nav-link d-flex align-items-center py-3 px-3 ${
+                      className={`nav-link d-flex align-items-center py-2 px-3 ${
                         location.pathname.includes(`/organizations/${org._id}`)
                           ? "active"
                           : ""
@@ -280,16 +343,18 @@ const OrganizationSidebar = ({ onToggle }) => {
                           ? "rgba(255,255,255,0.1)"
                           : "transparent",
                         transition: "all 0.3s ease",
+                        fontSize: "0.9rem"
                       }}
                     >
                       <FontAwesomeIcon
-                        icon={faTrophy}
-                        style={{ minWidth: "20px" }}
+                        icon={faBuilding}
+                        style={{ minWidth: "20px", fontSize: "0.8rem" }}
                       />
                       {!collapsed && (
                         <span
                           className="ms-3 text-truncate"
-                          style={{ maxWidth: "170px" }}
+                          style={{ maxWidth: "150px" }}
+                          title={org.name}
                         >
                           {org.name}
                         </span>
@@ -297,16 +362,34 @@ const OrganizationSidebar = ({ onToggle }) => {
                     </Link>
                   </li>
                 ))}
+                {organizations.length > 3 && !collapsed && (
+                  <li className="nav-item">
+                    <Link
+                      to="/organization-dashboard/organizations"
+                      className="nav-link d-flex align-items-center py-2 px-3"
+                      style={{
+                        color: "var(--primary-color)",
+                        textDecoration: "none",
+                        fontSize: "0.85rem",
+                        opacity: 0.8
+                      }}
+                    >
+                      <span className="ms-3">
+                        +{organizations.length - 3} more...
+                      </span>
+                    </Link>
+                  </li>
+                )}
               </ul>
             </div>
           )}
 
-          {/* Settings Section */}
+          {/* System Items */}
           <div className="nav-section mt-4">
             {!collapsed && (
               <div className="nav-section-header px-3 mb-2">
                 <small className="text-uppercase text-light opacity-75">
-                  Settings
+                  System
                 </small>
               </div>
             )}
@@ -314,28 +397,40 @@ const OrganizationSidebar = ({ onToggle }) => {
               className="nav flex-column"
               style={{ listStyle: "none", padding: 0 }}
             >
-              <li className="nav-item">
-                <Link
-                  to="/organization-dashboard/settings"
-                  className={`nav-link d-flex align-items-center py-3 px-3 ${
-                    location.pathname.includes("/settings") ? "active" : ""
-                  }`}
-                  style={{
-                    color: "var(--primary-color)",
-                    textDecoration: "none",
-                    borderLeft: location.pathname.includes("/settings")
-                      ? "4px solid var(--brand-color)"
-                      : "4px solid transparent",
-                    backgroundColor: location.pathname.includes("/settings")
-                      ? "rgba(255,255,255,0.1)"
-                      : "transparent",
-                    transition: "all 0.3s ease",
-                  }}
-                >
-                  <FontAwesomeIcon icon={faCog} style={{ minWidth: "20px" }} />
-                  {!collapsed && <span className="ms-3">Settings</span>}
-                </Link>
-              </li>
+              {systemItems.map((item, index) => (
+                <li className="nav-item" key={index}>
+                  <Link
+                    to={item.path}
+                    className={`nav-link d-flex align-items-center py-3 px-3 ${
+                      isActiveNavItem(item) ? "active" : ""
+                    }`}
+                    style={{
+                      color: "var(--primary-color)",
+                      textDecoration: "none",
+                      borderLeft: isActiveNavItem(item)
+                        ? "4px solid var(--brand-color)"
+                        : "4px solid transparent",
+                      backgroundColor: isActiveNavItem(item)
+                        ? "rgba(255,255,255,0.1)"
+                        : "transparent",
+                      transition: "all 0.3s ease",
+                    }}
+                  >
+                    <div className="d-flex align-items-center justify-content-between w-100">
+                      <div className="d-flex align-items-center">
+                        <FontAwesomeIcon
+                          icon={item.icon}
+                          style={{ minWidth: "20px" }}
+                        />
+                        {!collapsed && <span className="ms-3">{item.text}</span>}
+                      </div>
+                      {!collapsed && item.badge && (
+                        <span className="badge bg-danger ms-2">{item.badge}</span>
+                      )}
+                    </div>
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
         </nav>
