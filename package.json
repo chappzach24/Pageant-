@@ -13,9 +13,10 @@
   "scripts": {
     "start": "node Backend/server.js",
     "develop": "concurrently \"cd Backend && npm run watch\" \"cd client && npm run dev\"",
-    "install": "cd Backend && npm i && cd ../client && npm i",
+    "install-backend": "cd Backend && npm ci --only=production",
+    "install-client": "cd client && npm ci",
     "build": "cd client && npm run build",
-    "render-build": "npm run install && npm run build"
+    "render-build": "cd Backend && npm ci --only=production && cd ../client && npm ci && npm run build"
   },
   "keywords": ["pageant", "management", "platform"],
   "author": "Zachary Chapman",
