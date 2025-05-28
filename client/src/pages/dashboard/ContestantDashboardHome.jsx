@@ -1,304 +1,77 @@
-// Updated ContestantDashboardHome.jsx
-import { useState, useEffect } from 'react';
+// client/src/pages/dashboard/ContestantDashboardHome.jsx - REFACTORED VERSION
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faTrophy, 
   faCalendarAlt, 
-  faCheckCircle, 
-  faExclamationTriangle,
   faUsers,
-  faHistory,
-  faFire,
+  faExclamationTriangle,
   faEye
 } from '@fortawesome/free-solid-svg-icons';
-import PageantCard from './PageantCard';
+
+// Import reusable components
+import { 
+  LoadingSpinner, 
+  EmptyState,
+  ErrorAlert,
+  StatCard 
+} from '../../components/dashboard/common';
+
+// Import specialized components
+import { PageantGrid } from '../../components/dashboard/contestant';
+
+// Import custom hooks and utilities
+import { useAuth } from '../../context/AuthContext';
+import { usePageantData } from '../../hooks/usePageantData';
+import { preparePageantForModal } from '../../utils';
+
+// Import existing components
 import PageantDetailsModal from '../../components/dashboard/PageantDetailsModal';
 import ErrorBoundary from '../../components/ErrorBoundary';
-import '../../css/myPageants.css';
-import '../../css/pageantCard.css';
 
 const ContestantDashboardHome = () => {
   const { user } = useAuth();
-  const [upcomingPageants, setUpcomingPageants] = useState([]);
-  const [activePageants, setActivePageants] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
-  
-  // Added states for modal
   const [selectedPageant, setSelectedPageant] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  useEffect(() => {
-    const fetchContestantData = async () => {
-      try {
-        // Fetch participant data for the logged-in user
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/participants`, {
-          method: 'GET',
-          headers: {
-            'Accept': 'application/json',
-          },
-          credentials: 'include'
-        });
+  // Use custom hook for pageant data
+  const { participations, loading, error } = usePageantData();
 
-        if (!response.ok) {
-          throw new Error('Failed to fetch pageant data');
-        }
+  // Process and categorize pageants
+  const now = new Date();
+  const upcomingPageants = participations.filter(p => {
+    const startDate = new Date(p.pageant.startDate);
+    return startDate > now;
+  });
 
-        const data = await response.json();
-        if (data.participants && data.participants.length > 0) {
-          debugParticipantData(data.participants);
-        }
-        
-        const now = new Date();
-        
-        // Filter and process pageant data
-        const processPageantsData = (participants) => {
-          return participants.map(p => {
-            // Ensure the pageant object has all necessary fields
-            const pageant = p.pageant;
-            
-            // If pageant organization is populated as an object, make sure we retain the structure
-            // If not, we'll rely on the PageantCard to handle the display
-            
-            return {
-              ...p,
-              pageant: {
-                ...pageant,
-                // Ensure categories are properly formatted
-                categories: p.categories ? p.categories.map(cat => ({
-                  category: cat.category,
-                  score: cat.score,
-                  notes: cat.notes
-                })) : []
-              }
-            };
-          });
-        };
-        
-        // Filter upcoming pageants (pageants that haven't started yet)
-        const upcoming = data.participants
-          .filter(p => {
-            const startDate = new Date(p.pageant.startDate);
-            return startDate > now;
-          })
-          .map(p => processPageantsData([p])[0]);
-        
-        // Filter active pageants (pageants that have started but not ended)
-        const active = data.participants
-          .filter(p => {
-            const startDate = new Date(p.pageant.startDate);
-            const endDate = new Date(p.pageant.endDate);
-            return startDate <= now && endDate >= now;
-          })
-          .map(p => processPageantsData([p])[0]);
-        
-        console.log('Processed upcoming pageants:', upcoming);
-        console.log('Processed active pageants:', active);
-        
-        setUpcomingPageants(upcoming);
-        setActivePageants(active);
-      } catch (err) {
-        console.error('Error fetching contestant data:', err);
-        setError('Failed to load your pageant data. Please try again later.');
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const activePageants = participations.filter(p => {
+    const startDate = new Date(p.pageant.startDate);
+    const endDate = new Date(p.pageant.endDate);
+    return startDate <= now && endDate >= now;
+  });
 
-    if (user) {
-      fetchContestantData();
-    }
-  }, [user]);
-
-  useEffect(() => {
-    console.log("active", upcomingPageants);
-  })
-
-  // Debugging function to check data structure
-  const debugParticipantData = (participants) => {
-    console.log('=========== DEBUGGING PARTICIPANT DATA ===========');
-    
-    participants.forEach((p, index) => {
-      console.log(`Participant ${index + 1}:`, {
-        participantId: p._id,
-        pageantId: p.pageant?._id,
-        pageantName: p.pageant?.name,
-        
-        // Organization data is what we want to check
-        organizationType: typeof p.pageant?.organization,
-        organizationIsObject: typeof p.pageant?.organization === 'object',
-        organizationIsString: typeof p.pageant?.organization === 'string',
-        organizationHasName: p.pageant?.organization?.name !== undefined,
-        
-        // The raw organization data
-        organizationData: p.pageant?.organization,
-        
-        // If it's an object, check the structure
-        organizationName: typeof p.pageant?.organization === 'object' 
-          ? p.pageant?.organization?.name 
-          : p.pageant?.organization,
-          
-        // Categories data  
-        categoriesCount: p.categories?.length,
-        categorySample: p.categories?.length > 0 ? p.categories[0] : null
-      });
-    });
-    
-    console.log('===================================================');
-    
-    return participants;
-  };
-
-  // Format date to a readable format
-  const formatDate = (dateString) => {
-    if (!dateString) return "N/A";
-    
-    const options = { year: 'numeric', month: 'long', day: 'numeric' };
-    return new Date(dateString).toLocaleDateString(undefined, options);
-  };
-  
-  // Add this at the top of your ContestantDashboardHome.jsx file
-  const debugPageantObject = (pageant) => {
-    console.log('Pageant object structure:', JSON.stringify(pageant, null, 2));
-    
-    // Check for circular references or non-serializable values
-    const seen = new WeakSet();
-    const detectCircular = (obj, path = '') => {
-      if (obj && typeof obj === 'object') {
-        if (seen.has(obj)) {
-          console.warn(`Circular reference detected at ${path}`);
-          return true;
-        }
-        seen.add(obj);
-        
-        for (const key in obj) {
-          if (detectCircular(obj[key], `${path}.${key}`)) {
-            return true;
-          }
-        }
-      }
-      return false;
-    };
-    
-    detectCircular(pageant);
-    
-    // Check for any DOM elements accidentally in the object
-    const detectDOM = (obj, path = '') => {
-      if (obj && typeof obj === 'object') {
-        if (obj instanceof HTMLElement) {
-          console.warn(`DOM element found at ${path}`);
-          return true;
-        }
-        
-        for (const key in obj) {
-          if (detectDOM(obj[key], `${path}.${key}`)) {
-            return true;
-          }
-        }
-      }
-      return false;
-    };
-    
-    detectDOM(pageant);
-    
-    return pageant;
-  };
-
-  const preparePageantForModal = (pageant) => {
-    // Defensive check
-    if (!pageant) return null;
-    
-    // Handle the organization property specifically
-    let organizationName = '';
-    
-    if (pageant.organization) {
-      if (typeof pageant.organization === 'string') {
-        organizationName = pageant.organization;
-      } else if (typeof pageant.organization === 'object') {
-        // Extract the name property or use a default
-        organizationName = pageant.organization.name || 'Unknown Organization';
-      }
-    }
-    
-    // Create a clean object with proper values
-    return {
-      _id: pageant._id || '',
-      name: pageant.name || 'Untitled Pageant',
-      organization: organizationName,
-      description: pageant.description || '',
-      startDate: pageant.startDate || '',
-      endDate: pageant.endDate || '',
-      location: {
-        venue: pageant.location?.venue || '',
-        address: {
-          city: pageant.location?.address?.city || '',
-          state: pageant.location?.address?.state || ''
-        }
-      },
-      status: pageant.status || '',
-      registrationDeadline: pageant.registrationDeadline || '',
-      // Properly preserve the entryFee object structure
-      entryFee: pageant.entryFee 
-        ? {
-            amount: pageant.entryFee.amount || 0,
-            currency: pageant.entryFee.currency || 'USD'
-          }
-        : {
-            amount: 0,
-            currency: 'USD'
-          },
-      ageGroups: Array.isArray(pageant.ageGroups) ? pageant.ageGroups : [],
-      categories: Array.isArray(pageant.categories) 
-        ? pageant.categories.map(cat => {
-            if (typeof cat === 'string') {
-              return { category: cat };
-            } else if (typeof cat === 'object') {
-              return {
-                category: cat.category || cat.name || 'Unknown Category',
-                score: cat.score || null,
-                placement: cat.placement || null
-              };
-            }
-            return { category: 'Unknown Category' };
-          }) 
-        : [],
-      overallPlacement: pageant.overallPlacement || null,
-      competitionYear: pageant.competitionYear || new Date().getFullYear()
-    };
-  };
-  
-  // Then update your openPageantDetails function to use this helper:
+  // Modal handlers
   const openPageantDetails = (pageant) => {
-    console.log('Opening pageant details for:', pageant);
-    
-    // Use the helper to clean the pageant object
     const cleanPageant = preparePageantForModal(pageant);
-    
     setSelectedPageant(cleanPageant);
     setIsModalOpen(true);
-    
-    // Prevent scrolling on the body while modal is open
     document.body.style.overflow = 'hidden';
   };
 
-  // Close modal
   const closePageantDetails = () => {
     setIsModalOpen(false);
     setSelectedPageant(null);
-    
-    // Restore scrolling
     document.body.style.overflow = 'auto';
   };
 
-  // Custom renderer for the View Details button in PageantCard
+  // Custom renderer for the View Details button
   const renderViewDetailsButton = (pageant) => (
     <button 
       className="btn btn-outline-primary w-100"
       onClick={(e) => {
-        e.preventDefault(); // Prevent any default anchor behavior
-        e.stopPropagation(); // Prevent event bubbling
+        e.preventDefault();
+        e.stopPropagation();
         openPageantDetails(pageant);
       }}
     >
@@ -307,132 +80,98 @@ const ContestantDashboardHome = () => {
     </button>
   );
 
+  if (loading) {
+    return <LoadingSpinner />;
+  }
+
+  if (error) {
+    return <ErrorAlert message={error} />;
+  }
+
   return (
     <div className="dashboard-home">
+      {/* Welcome Section */}
       <div className="welcome-section mb-4">
         <h2 className="u-text-dark mb-1">Welcome back, {user?.firstName || 'Contestant'}!</h2>
         <p className="u-text-dark">Here's what's happening with your pageants</p>
       </div>
 
-      {isLoading ? (
-        <div className="d-flex justify-content-center p-5">
-          <div className="spinner-border text-secondary" role="status">
-            <span className="visually-hidden">Loading...</span>
-          </div>
+      {/* Stats Cards */}
+      <div className="row g-4 mb-5">
+        <div className="col-md-4">
+          <StatCard 
+            icon={faTrophy}
+            value={activePageants.length}
+            label="Active Pageants"
+          />
         </div>
-      ) : error ? (
-        <div className="alert alert-danger" role="alert">
-          {error}
+        
+        <div className="col-md-4">
+          <StatCard 
+            icon={faCalendarAlt}
+            value={upcomingPageants.length}
+            label="Upcoming Pageants"
+          />
         </div>
-      ) : (
-        <>
-          {/* Stats Cards */}
-          <div className="row g-4 mb-5">
-            <div className="col-md-4">
-              <div className="card h-100 shadow-sm">
-                <div className="card-body d-flex flex-column align-items-center text-center p-4">
-                  <div className="stat-icon">
-                    <FontAwesomeIcon icon={faTrophy} />
-                  </div>
-                  <div className="stat-value">{activePageants.length}</div>
-                  <div className="stat-label">Active Pageants</div>
-                </div>
-              </div>
-            </div>
-            
-            <div className="col-md-4">
-              <div className="card h-100 shadow-sm">
-                <div className="card-body d-flex flex-column align-items-center text-center p-4">
-                  <div className="stat-icon">
-                    <FontAwesomeIcon icon={faCalendarAlt} />
-                  </div>
-                  <div className="stat-value">{upcomingPageants.length}</div>
-                  <div className="stat-label">Upcoming Pageants</div>
-                </div>
-              </div>
-            </div>
-            
-            <div className="col-md-4">
-              <div className="card h-100 shadow-sm">
-                <div className="card-body d-flex flex-column align-items-center text-center p-4">
-                  <div className="stat-icon">
-                    <FontAwesomeIcon icon={faUsers} />
-                  </div>
-                  <div className="stat-value">{user?.ageGroup || 'N/A'}</div>
-                  <div className="stat-label">Your Age Group</div>
-                </div>
-              </div>
-            </div>
-          </div>
+        
+        <div className="col-md-4">
+          <StatCard 
+            icon={faUsers}
+            value={user?.ageGroup || 'N/A'}
+            label="Your Age Group"
+          />
+        </div>
+      </div>
 
-          {/* Active Pageants Section */}
-          <div className="active-pageants-section mb-5">
-            <div className="d-flex justify-content-between align-items-center mb-3">
-              <h4 className="u-text-dark">Active Pageants</h4>
-              <Link to="/contestant-dashboard/my-pageants" className="btn btn-sm btn-outline-dark">View All</Link>
-            </div>
+      {/* Active Pageants Section */}
+      <div className="active-pageants-section mb-5">
+        <div className="d-flex justify-content-between align-items-center mb-3">
+          <h4 className="u-text-dark">Active Pageants</h4>
+          <Link to="/contestant-dashboard/my-pageants" className="btn btn-sm btn-outline-dark">
+            View All
+          </Link>
+        </div>
 
-            {activePageants.length === 0 ? (
-              <div className="alert alert-info" role="alert">
-                <FontAwesomeIcon icon={faExclamationTriangle} className="me-2" />
-                You have no active pageants. Join a pageant to get started!
-              </div>
-            ) : (
-              <div className="row g-4">
-                {activePageants.slice(0, 2).map((participation, index) => (
-                  <div className="col-md-6" key={index}>
-                    <PageantCard 
-                      pageant={participation.pageant}
-                      type="active"
-                      showCategories={true}
-                      className={`delay-${index % 6}`}
-                      renderActions={() => renderViewDetailsButton(participation.pageant)}
-                    />
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+        {activePageants.length === 0 ? (
+          <EmptyState 
+            icon={faExclamationTriangle}
+            message="You have no active pageants. Join a pageant to get started!"
+            variant="info"
+          />
+        ) : (
+          <PageantGrid 
+            pageants={activePageants.slice(0, 2).map(p => p.pageant)}
+            type="active"
+            showCategories={true}
+            renderActions={renderViewDetailsButton}
+          />
+        )}
+      </div>
 
-          {/* Upcoming Pageants Section */}
-          <div className="upcoming-pageants-section">
-            <div className="d-flex justify-content-between align-items-center mb-3">
-              <h4 className="u-text-dark">Upcoming Pageants</h4>
-              <Link to="/contestant-dashboard/join-pageant" className="btn btn-sm btn-outline-dark">Find More</Link>
-            </div>
+      {/* Upcoming Pageants Section */}
+      <div className="upcoming-pageants-section">
+        <div className="d-flex justify-content-between align-items-center mb-3">
+          <h4 className="u-text-dark">Upcoming Pageants</h4>
+          <Link to="/contestant-dashboard/join-pageant" className="btn btn-sm btn-outline-dark">
+            Find More
+          </Link>
+        </div>
 
-            {upcomingPageants.length === 0 ? (
-              <div className="alert alert-info" role="alert">
-                <FontAwesomeIcon icon={faExclamationTriangle} className="me-2" />
-                You have no upcoming pageants. Browse available pageants to join one!
-              </div>
-            ) : (
-              <div className="row g-4">
-                {upcomingPageants.slice(0, 2).map((participation, index) => (
-                  <div className="col-md-6" key={index}>
-                    <PageantCard 
-                      pageant={participation.pageant}
-                      type="active"
-                      showCategories={true}
-                      className={`delay-${index % 6}`}
-                      renderActions={() => renderViewDetailsButton(participation.pageant)}
-                    />
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </>
-      )}
-      
-      {/* PageantDetailsModal */}
-      {isModalOpen && (
-        <PageantDetailsModal 
-          pageant={selectedPageant}
-          isOpen={isModalOpen}
-          onClose={closePageantDetails}
-        />
-      )}
+        {upcomingPageants.length === 0 ? (
+          <EmptyState 
+            icon={faExclamationTriangle}
+            message="You have no upcoming pageants. Browse available pageants to join one!"
+            variant="info"
+          />
+        ) : (
+          <PageantGrid 
+            pageants={upcomingPageants.slice(0, 2).map(p => p.pageant)}
+            type="active"
+            showCategories={true}
+            renderActions={renderViewDetailsButton}
+          />
+        )}
+      </div>
 
       {/* PageantDetailsModal with Error Boundary */}
       {isModalOpen && (
@@ -455,7 +194,7 @@ const ContestantDashboardHome = () => {
           />
         </ErrorBoundary>
       )}
-      </div>
+    </div>
   );
 };
 

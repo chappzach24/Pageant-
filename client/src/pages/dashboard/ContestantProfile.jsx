@@ -1,4 +1,4 @@
-// client/src/pages/dashboard/ContestantProfile.jsx
+// client/src/pages/dashboard/ContestantProfile.jsx - REFACTORED VERSION
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -8,14 +8,31 @@ import {
   faNotesMedical,
   faPhone,
   faInfoCircle,
-  faImage,
   faEdit,
   faSave,
-  faTimes,
-  faCheck,
-  faExclamationTriangle
+  faTimes
 } from '@fortawesome/free-solid-svg-icons';
-import { getContestantProfile, updateContestantProfile, getProfileCompleteness } from '../../services/profileService';
+
+// Import reusable components
+import { 
+  DashboardPageHeader, 
+  TabNavigation, 
+  LoadingSpinner, 
+  ErrorAlert,
+  ActionButton 
+} from '../../components/dashboard/common';
+
+// Import specialized components
+import { ProfileCompletionCard } from '../../components/dashboard/contestant';
+
+// Import services and utilities
+import { 
+  getContestantProfile, 
+  updateContestantProfile, 
+  getProfileCompleteness 
+} from '../../services/profileService';
+import { formatDate } from '../../utils';
+
 import '../../css/contestantProfile.css';
 
 const ContestantProfile = () => {
@@ -43,7 +60,7 @@ const ContestantProfile = () => {
     allergies: '',
     medicalConditions: '',
     // Proof of age
-    proofOfAgeType: 'birth-certificate', // or 'id'
+    proofOfAgeType: 'birth-certificate',
     proofOfAgeFile: null
   });
   const [originalData, setOriginalData] = useState({});
@@ -51,6 +68,35 @@ const ContestantProfile = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [completeness, setCompleteness] = useState(0);
+
+  // Tab configuration
+  const tabs = [
+    {
+      id: 'basic',
+      label: 'Basic Information',
+      icon: faUser
+    },
+    {
+      id: 'appearance',
+      label: 'About Me',
+      icon: faInfoCircle
+    },
+    {
+      id: 'emergency',
+      label: 'Emergency Contact',
+      icon: faPhone
+    },
+    {
+      id: 'medical',
+      label: 'Medical Information',
+      icon: faNotesMedical
+    },
+    {
+      id: 'documents',
+      label: 'Documents',
+      icon: faIdCard
+    }
+  ];
 
   useEffect(() => {
     // Fetch contestant profile data
@@ -61,7 +107,7 @@ const ContestantProfile = () => {
         
         if (response.success) {
           const { user: userData, profile } = response.contestant;
-          console.log("data", userData);
+          
           // Prepare profile data object
           const newProfileData = {
             // Basic info from user
@@ -169,82 +215,39 @@ const ContestantProfile = () => {
     setIsEditing(false);
   };
 
-  const formatDate = (dateString) => {
-    if (!dateString) return '';
-    const options = { year: 'numeric', month: 'long', day: 'numeric' };
-    return new Date(dateString).toLocaleDateString(undefined, options);
-  };
-
   if (loading && !user) {
-    return (
-      <div className="d-flex justify-content-center p-5">
-        <div className="spinner-border text-secondary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner text="Loading profile..." />;
   }
 
   return (
     <div className="contestant-profile">
-      <div className="profile-header mb-4 d-flex justify-content-between align-items-center">
-        <div>
-          <h2 className="u-text-dark mb-1">My Profile</h2>
-          <p className="u-text-dark">Manage your personal information</p>
-        </div>
-        <div>
-          {!isEditing ? (
-            <button 
-              className="btn btn-primary"
-              onClick={() => setIsEditing(true)}
-            >
-              <FontAwesomeIcon icon={faEdit} className="me-2" />
-              Edit Profile
-            </button>
-          ) : (
-            <button 
-              className="btn btn-secondary ms-2"
-              onClick={cancelEditing}
-            >
-              <FontAwesomeIcon icon={faTimes} className="me-2" />
-              Cancel
-            </button>
-          )}
-        </div>
-      </div>
+      <DashboardPageHeader 
+        title="My Profile"
+        subtitle="Manage your personal information"
+      >
+        {!isEditing ? (
+          <ActionButton 
+            variant="primary"
+            icon={faEdit}
+            onClick={() => setIsEditing(true)}
+          >
+            Edit Profile
+          </ActionButton>
+        ) : (
+          <ActionButton 
+            variant="secondary"
+            icon={faTimes}
+            onClick={cancelEditing}
+          >
+            Cancel
+          </ActionButton>
+        )}
+      </DashboardPageHeader>
 
       {/* Profile Completeness */}
-      <div className="card mb-4">
-        <div className="card-body">
-          <h5 className="card-title">Profile Completeness</h5>
-          <div className="progress">
-            <div 
-              className={`progress-bar ${completeness < 50 ? 'bg-danger' : completeness < 80 ? 'bg-warning' : 'bg-success'}`}
-              role="progressbar" 
-              style={{ width: `${completeness}%` }} 
-              aria-valuenow={completeness} 
-              aria-valuemin="0" 
-              aria-valuemax="100"
-            >
-              {completeness}%
-            </div>
-          </div>
-          <div className="mt-2 d-flex align-items-center">
-            {completeness < 100 ? (
-              <>
-                <FontAwesomeIcon icon={faExclamationTriangle} className="text-warning me-2" />
-                <small className="text-muted">Complete your profile to join pageants.</small>
-              </>
-            ) : (
-              <>
-                <FontAwesomeIcon icon={faCheck} className="text-success me-2" />
-                <small className="text-muted">Profile is complete! You're all set for pageants.</small>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
+      <ProfileCompletionCard completeness={completeness} />
 
+      {/* Success/Error Messages */}
       {successMessage && (
         <div className="alert alert-success" role="alert">
           {successMessage}
@@ -252,63 +255,19 @@ const ContestantProfile = () => {
       )}
 
       {errorMessage && (
-        <div className="alert alert-danger" role="alert">
-          {errorMessage}
-        </div>
+        <ErrorAlert message={errorMessage} />
       )}
 
       {/* Profile Nav Tabs */}
-      <ul className="nav nav-tabs mb-4">
-        <li className="nav-item">
-          <button 
-            className={`nav-link ${activeTab === 'basic' ? 'active' : ''}`}
-            onClick={() => setActiveTab('basic')}
-          >
-            <FontAwesomeIcon icon={faUser} className="me-2" />
-            Basic Information
-          </button>
-        </li>
-        <li className="nav-item">
-          <button 
-            className={`nav-link ${activeTab === 'appearance' ? 'active' : ''}`}
-            onClick={() => setActiveTab('appearance')}
-          >
-            <FontAwesomeIcon icon={faInfoCircle} className="me-2" />
-            About Me
-          </button>
-        </li>
-        <li className="nav-item">
-          <button 
-            className={`nav-link ${activeTab === 'emergency' ? 'active' : ''}`}
-            onClick={() => setActiveTab('emergency')}
-          >
-            <FontAwesomeIcon icon={faPhone} className="me-2" />
-            Emergency Contact
-          </button>
-        </li>
-        <li className="nav-item">
-          <button 
-            className={`nav-link ${activeTab === 'medical' ? 'active' : ''}`}
-            onClick={() => setActiveTab('medical')}
-          >
-            <FontAwesomeIcon icon={faNotesMedical} className="me-2" />
-            Medical Information
-          </button>
-        </li>
-        <li className="nav-item">
-          <button 
-            className={`nav-link ${activeTab === 'documents' ? 'active' : ''}`}
-            onClick={() => setActiveTab('documents')}
-          >
-            <FontAwesomeIcon icon={faIdCard} className="me-2" />
-            Documents
-          </button>
-        </li>
-      </ul>
+      <TabNavigation 
+        tabs={tabs}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+      />
 
       <form onSubmit={handleSubmit}>
-        {/* Basic Information */}
-        <div className={`tab-pane ${activeTab === 'basic' ? 'd-block' : 'd-none'}`}>
+        {/* Basic Information Tab */}
+        {activeTab === 'basic' && (
           <div className="card">
             <div className="card-body">
               <h4 className="card-title mb-4">Basic Information</h4>
@@ -402,10 +361,10 @@ const ContestantProfile = () => {
               </div>
             </div>
           </div>
-        </div>
+        )}
 
-        {/* About Me */}
-        <div className={`tab-pane ${activeTab === 'appearance' ? 'd-block' : 'd-none'}`}>
+        {/* About Me Tab */}
+        {activeTab === 'appearance' && (
           <div className="card">
             <div className="card-body">
               <h4 className="card-title mb-4">About Me</h4>
@@ -484,10 +443,10 @@ const ContestantProfile = () => {
               </div>
             </div>
           </div>
-        </div>
+        )}
 
-        {/* Emergency Contact */}
-        <div className={`tab-pane ${activeTab === 'emergency' ? 'd-block' : 'd-none'}`}>
+        {/* Emergency Contact Tab */}
+        {activeTab === 'emergency' && (
           <div className="card">
             <div className="card-body">
               <h4 className="card-title mb-4">Emergency Contact</h4>
@@ -552,10 +511,10 @@ const ContestantProfile = () => {
               </div>
             </div>
           </div>
-        </div>
+        )}
 
-        {/* Medical Information */}
-        <div className={`tab-pane ${activeTab === 'medical' ? 'd-block' : 'd-none'}`}>
+        {/* Medical Information Tab */}
+        {activeTab === 'medical' && (
           <div className="card">
             <div className="card-body">
               <h4 className="card-title mb-4">Medical Information</h4>
@@ -602,10 +561,10 @@ const ContestantProfile = () => {
               </div>
             </div>
           </div>
-        </div>
+        )}
 
-        {/* Documents - We'll implement this section later */}
-        <div className={`tab-pane ${activeTab === 'documents' ? 'd-block' : 'd-none'}`}>
+        {/* Documents Tab */}
+        {activeTab === 'documents' && (
           <div className="card">
             <div className="card-body">
               <h4 className="card-title mb-4">Proof of Age</h4>
@@ -645,27 +604,20 @@ const ContestantProfile = () => {
               </div>
             </div>
           </div>
-        </div>
+        )}
 
+        {/* Save Button */}
         {isEditing && (
           <div className="d-flex justify-content-end mt-4">
-            <button 
+            <ActionButton 
               type="submit"
-              className="btn btn-success"
+              variant="success"
+              icon={faSave}
+              loading={updating}
               disabled={updating}
             >
-              {updating ? (
-                <>
-                  <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <FontAwesomeIcon icon={faSave} className="me-2" />
-                  Save Changes
-                </>
-              )}
-            </button>
+              Save Changes
+            </ActionButton>
           </div>
         )}
       </form>
