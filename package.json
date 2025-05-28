@@ -1,20 +1,23 @@
 {
-  "name": "pageant-",
+  "name": "pageant-platform",
   "version": "1.0.0",
-  "description": ".",
-  "main": "index.js",
+  "description": "A comprehensive pageant management platform",
+  "main": "Backend/server.js",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
   "dependencies": {
     "concurrently": "^9.1.2"
   },
   "scripts": {
-    "start": "node Backend/server.js --ignore client",
+    "start": "node Backend/server.js",
     "develop": "concurrently \"cd Backend && npm run watch\" \"cd client && npm run dev\"",
-    "install": "cd Backend && npm i && cd ../client && npm i --production=false",
-    "seed": "cd Backend && npm run seed",
+    "install": "cd Backend && npm i && cd ../client && npm i",
     "build": "cd client && npm run build",
-    "render-build": "npm install && npm run build"
+    "render-build": "npm run install && npm run build"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC"
+  "keywords": ["pageant", "management", "platform"],
+  "author": "Zachary Chapman",
+  "license": "MIT"
 }

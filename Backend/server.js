@@ -26,12 +26,18 @@ mongoose.connect(process.env.MONGO_URI, {
 // Middleware
 app.use(express.json());
 app.use(cookieParser());
-app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:3000'],
+
+// Updated CORS configuration for production
+const corsOptions = {
+  origin: process.env.NODE_ENV === 'production' 
+    ? [process.env.CLIENT_URL] 
+    : ['http://localhost:5173', 'http://localhost:3000'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']
-}));
+};
+
+app.use(cors(corsOptions));
 
 // Global file upload middleware (for routes that don't need specific configurations)
 app.use(fileUpload({
@@ -65,18 +71,19 @@ app.use('/api/pageants', require('./routes/api/pageants'));
 app.use('/api/participants', require('./routes/api/participants'));
 app.use('/api/contestant-profiles', require('./routes/api/contestantProfile'));
 
-// Simple test route
-app.get('/', (req, res) => {
-  res.send('API is running');
-});
-
-// Handle production
+// Handle production - serve React app
 if (process.env.NODE_ENV === 'production') {
-  // Set static folder
-  app.use(express.static('client/build'));
+  // Set static folder to built React app
+  app.use(express.static(path.join(__dirname, '../client/dist')));
   
+  // Handle React routing, return all requests to React app
   app.get('*', (req, res) => {
-    res.sendFile(path.resolve(__dirname, 'client', 'build', 'index.html'));
+    res.sendFile(path.join(__dirname, '../client/dist', 'index.html'));
+  });
+} else {
+  // Simple test route for development
+  app.get('/', (req, res) => {
+    res.send('API is running');
   });
 }
 
