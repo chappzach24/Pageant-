@@ -14,7 +14,7 @@ export const AuthProvider = ({ children }) => {
     const checkLoggedIn = async () => {
       try {
         // First check if backend is available
-        const pingResponse = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}`, {
+        const pingResponse = await fetch('/', {
           method: 'GET',
           headers: {
             'Accept': 'application/json',
@@ -32,7 +32,7 @@ export const AuthProvider = ({ children }) => {
 
         setBackendAvailable(true);
         
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/auth/me`, {
+        const response = await fetch('/api/auth/me', {
           credentials: 'include',
           headers: {
             'Accept': 'application/json',
@@ -64,7 +64,7 @@ export const AuthProvider = ({ children }) => {
 
     setError(null);
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/auth/login`, {
+      const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -96,7 +96,7 @@ export const AuthProvider = ({ children }) => {
 
     setError(null);
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/auth/register`, {
+      const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -128,7 +128,7 @@ export const AuthProvider = ({ children }) => {
 
     setError(null);
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/auth/contestant-register`, {
+      const response = await fetch('/api/auth/contestant-register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -161,7 +161,7 @@ export const AuthProvider = ({ children }) => {
     }
 
     try {
-      await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/auth/logout`, {
+      await fetch('/api/auth/logout', {
         method: 'GET',
         credentials: 'include'
       });
