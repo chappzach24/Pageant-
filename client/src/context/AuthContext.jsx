@@ -1,4 +1,3 @@
-// client/src/context/AuthContext.jsx
 import { createContext, useState, useEffect, useContext } from 'react';
 
 const AuthContext = createContext();
@@ -27,16 +26,20 @@ export const AuthProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const [backendAvailable, setBackendAvailable] = useState(true);
 
+  // Get the API base URL
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
   // Check if user is logged in on initial load
   useEffect(() => {
     const checkLoggedIn = async () => {
       try {
         // First check if backend is available
-        const pingResponse = await fetch(`${API_URL}/`, {
+        const pingResponse = await fetch('/', {
           method: 'GET',
           headers: {
             'Accept': 'application/json',
           },
+          credentials: 'include',
           // Small timeout to quickly detect if server is unreachable
           signal: AbortSignal.timeout(3000)
         }).catch(() => null);
@@ -50,7 +53,7 @@ export const AuthProvider = ({ children }) => {
 
         setBackendAvailable(true);
         
-        const response = await fetch(`${API_URL}/api/auth/me`, {
+        const response = await fetch('/api/auth/me', {
           credentials: 'include',
           headers: {
             'Accept': 'application/json',
@@ -61,10 +64,12 @@ export const AuthProvider = ({ children }) => {
           const data = await response.json();
           setUser(data.user);
         } else {
+          // Server is available but user is not authenticated
           setUser(null);
         }
       } catch (err) {
         console.error('Auth check error:', err);
+        setBackendAvailable(false);
         setUser(null);
       } finally {
         setLoading(false);
@@ -72,7 +77,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     checkLoggedIn();
-  }, []);
+  }, [API_URL]);
 
   // Login function
   const login = async (email, password) => {
@@ -207,4 +212,11 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-export const useAuth = () => useContext(AuthContext);
+// Export useAuth as a named export
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
