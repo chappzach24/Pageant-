@@ -1,4 +1,3 @@
-// client/src/context/AuthContext.jsx
 import { createContext, useState, useEffect, useContext } from 'react';
 
 const AuthContext = createContext();
@@ -9,16 +8,20 @@ export const AuthProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const [backendAvailable, setBackendAvailable] = useState(true);
 
+  // Get the API base URL
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
   // Check if user is logged in on initial load
   useEffect(() => {
     const checkLoggedIn = async () => {
       try {
-        // First check if backend is available
-        const pingResponse = await fetch('/', {
+        // First check if backend is available by pinging a backend endpoint
+        const pingResponse = await fetch(`${API_URL}/api/auth/me`, {
           method: 'GET',
           headers: {
             'Accept': 'application/json',
           },
+          credentials: 'include',
           // Small timeout to quickly detect if server is unreachable
           signal: AbortSignal.timeout(3000)
         }).catch(() => null);
@@ -32,21 +35,17 @@ export const AuthProvider = ({ children }) => {
 
         setBackendAvailable(true);
         
-        const response = await fetch('/api/auth/me', {
-          credentials: 'include',
-          headers: {
-            'Accept': 'application/json',
-          }
-        });
-        
-        if (response.ok) {
-          const data = await response.json();
+        // If we get here, the server responded (even if with an error)
+        if (pingResponse.ok) {
+          const data = await pingResponse.json();
           setUser(data.user);
         } else {
+          // Server is available but user is not authenticated
           setUser(null);
         }
       } catch (err) {
         console.error('Auth check error:', err);
+        setBackendAvailable(false);
         setUser(null);
       } finally {
         setLoading(false);
@@ -54,7 +53,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     checkLoggedIn();
-  }, []);
+  }, [API_URL]);
 
   // Login function
   const login = async (email, password) => {
@@ -64,7 +63,7 @@ export const AuthProvider = ({ children }) => {
 
     setError(null);
     try {
-      const response = await fetch('/api/auth/login', {
+      const response = await fetch(`${API_URL}/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -96,7 +95,7 @@ export const AuthProvider = ({ children }) => {
 
     setError(null);
     try {
-      const response = await fetch('/api/auth/register', {
+      const response = await fetch(`${API_URL}/api/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -128,7 +127,7 @@ export const AuthProvider = ({ children }) => {
 
     setError(null);
     try {
-      const response = await fetch('/api/auth/contestant-register', {
+      const response = await fetch(`${API_URL}/api/auth/contestant-register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -161,7 +160,7 @@ export const AuthProvider = ({ children }) => {
     }
 
     try {
-      await fetch('/api/auth/logout', {
+      await fetch(`${API_URL}/api/auth/logout`, {
         method: 'GET',
         credentials: 'include'
       });
@@ -189,4 +188,11 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-export const useAuth = () => useContext(AuthContext);
+// Export useAuth as a named export
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
