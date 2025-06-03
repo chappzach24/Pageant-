@@ -3,6 +3,24 @@ import { createContext, useState, useEffect, useContext } from 'react';
 
 const AuthContext = createContext();
 
+// Better API URL detection for both development and production
+const getApiUrl = () => {
+  // If VITE_API_URL is set, use it
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+  
+  // In production (like Render), the API is usually on the same domain
+  if (import.meta.env.PROD) {
+    return ''; // Empty string means same origin
+  }
+  
+  // Development fallback
+  return 'http://localhost:5000';
+};
+
+const API_URL = getApiUrl();
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -14,7 +32,7 @@ export const AuthProvider = ({ children }) => {
     const checkLoggedIn = async () => {
       try {
         // First check if backend is available
-        const pingResponse = await fetch('/', {
+        const pingResponse = await fetch(`${API_URL}/`, {
           method: 'GET',
           headers: {
             'Accept': 'application/json',
@@ -32,7 +50,7 @@ export const AuthProvider = ({ children }) => {
 
         setBackendAvailable(true);
         
-        const response = await fetch('/api/auth/me', {
+        const response = await fetch(`${API_URL}/api/auth/me`, {
           credentials: 'include',
           headers: {
             'Accept': 'application/json',
@@ -64,7 +82,7 @@ export const AuthProvider = ({ children }) => {
 
     setError(null);
     try {
-      const response = await fetch('/api/auth/login', {
+      const response = await fetch(`${API_URL}/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -96,7 +114,7 @@ export const AuthProvider = ({ children }) => {
 
     setError(null);
     try {
-      const response = await fetch('/api/auth/register', {
+      const response = await fetch(`${API_URL}/api/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -128,7 +146,7 @@ export const AuthProvider = ({ children }) => {
 
     setError(null);
     try {
-      const response = await fetch('/api/auth/contestant-register', {
+      const response = await fetch(`${API_URL}/api/auth/contestant-register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -161,7 +179,7 @@ export const AuthProvider = ({ children }) => {
     }
 
     try {
-      await fetch('/api/auth/logout', {
+      await fetch(`${API_URL}/api/auth/logout`, {
         method: 'GET',
         credentials: 'include'
       });
