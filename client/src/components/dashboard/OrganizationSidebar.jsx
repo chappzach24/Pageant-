@@ -99,7 +99,7 @@ const OrganizationSidebar = ({ onToggle }) => {
       text: "All Pageants"
     },
     {
-      path: "/organization-dashboard/participants",
+      path: `/organization-dashboard/${organizations[0]?._id}/participants`,
       icon: faUsers,
       text: "Participants"
     },
