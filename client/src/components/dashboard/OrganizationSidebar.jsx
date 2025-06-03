@@ -66,6 +66,10 @@ const OrganizationSidebar = ({ onToggle }) => {
     }
   }, [collapsed, onToggle]);
 
+  useEffect(() => {
+    // console.log(`${organizations[0]._id}`)
+  })
+
   const handleLogout = async () => {
     try {
       await logout();
@@ -90,7 +94,7 @@ const OrganizationSidebar = ({ onToggle }) => {
       badge: organizations.length > 0 ? organizations.length : null
     },
     {
-      path: "/organization-dashboard/pageants",
+      path: `/organization-dashboard/${organizations[0]?._id}/pageants`,
       icon: faTrophy,
       text: "All Pageants"
     },

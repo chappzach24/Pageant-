@@ -74,7 +74,7 @@ const router = createBrowserRouter([
               },
               // Protected organization-specific routes - users can only access their own organizations
               {
-                path: "organizations/:organizationId",
+                path: ":organizationId",
                 element: <OrganizationOwnerCheck />,
                 children: [
                   {
