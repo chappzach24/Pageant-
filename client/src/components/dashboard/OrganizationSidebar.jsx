@@ -109,7 +109,7 @@ const OrganizationSidebar = ({ onToggle }) => {
       text: "Judges"
     },
     {
-      path: "/organization-dashboard/reports",
+      path: `/organization-dashboard/${organizations[0]?._id}/reports`,
       icon: faChartBar,
       text: "Reports & Analytics"
     }

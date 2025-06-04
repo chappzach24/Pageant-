@@ -29,6 +29,7 @@ import OrganizationDashboardHome from "./pages/dashboard/OrganizationDashboardHo
 import PageantManagement from "./pages/dashboard/PageantManagement.jsx";
 import AddPageant from "./pages/dashboard/AddPageant.jsx";
 import OrganizationParticipants from "./pages/dashboard/OrganizationParticipants.jsx";
+import OrganizationReports from "./pages/dashboard/OrganizationReports.jsx";
 
 const router = createBrowserRouter([
   {
@@ -89,6 +90,10 @@ const router = createBrowserRouter([
                   {
                     path: 'participants',
                     element: <OrganizationParticipants />
+                  },
+                  {
+                    path: 'reports',
+                    element: <OrganizationReports />,
                   },
                 ],
               },
