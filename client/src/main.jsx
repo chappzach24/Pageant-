@@ -28,6 +28,7 @@ import OrganizationDashboardLayout from "./components/dashboard/OrganizationDash
 import OrganizationDashboardHome from "./pages/dashboard/OrganizationDashboardHome.jsx";
 import PageantManagement from "./pages/dashboard/PageantManagement.jsx";
 import AddPageant from "./pages/dashboard/AddPageant.jsx";
+import ScoringDashboard from "./pages/dashboard/ScoringDashboard.jsx";
 
 const router = createBrowserRouter([
   {
@@ -71,6 +72,10 @@ const router = createBrowserRouter([
               {
                 index: true,
                 element: <OrganizationDashboardHome />,
+              },
+              {
+                path: "scoring",
+                element: <ScoringDashboard />,
               },
               // Protected organization-specific routes - users can only access their own organizations
               {

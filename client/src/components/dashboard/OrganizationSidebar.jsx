@@ -14,7 +14,7 @@ import {
   faGavel,
   faFileAlt,
   faBell,
-  faPlus
+  faPlus,
 } from "@fortawesome/free-solid-svg-icons";
 import { useAuth } from "../../context/AuthContext";
 
@@ -81,34 +81,39 @@ const OrganizationSidebar = ({ onToggle }) => {
       path: "/organization-dashboard",
       icon: faHome,
       text: "Dashboard",
-      exact: true
+      exact: true,
     },
     {
       path: "/organization-dashboard/organizations",
       icon: faBuilding,
       text: "My Organizations",
-      badge: organizations.length > 0 ? organizations.length : null
+      badge: organizations.length > 0 ? organizations.length : null,
     },
     {
       path: "/organization-dashboard/pageants",
       icon: faTrophy,
-      text: "All Pageants"
+      text: "All Pageants",
+    },
+    {
+      path: "/organization-dashboard/scoring",
+      icon: faTrophy,
+      text: "Scoring & Results",
     },
     {
       path: "/organization-dashboard/participants",
       icon: faUsers,
-      text: "Participants"
+      text: "Participants",
     },
     {
       path: "/organization-dashboard/judges",
       icon: faGavel,
-      text: "Judges"
+      text: "Judges",
     },
     {
       path: "/organization-dashboard/reports",
       icon: faChartBar,
-      text: "Reports & Analytics"
-    }
+      text: "Reports & Analytics",
+    },
   ];
 
   // Settings and system items
@@ -117,13 +122,13 @@ const OrganizationSidebar = ({ onToggle }) => {
       path: "/organization-dashboard/notifications",
       icon: faBell,
       text: "Notifications",
-      badge: notifications > 0 ? notifications : null
+      badge: notifications > 0 ? notifications : null,
     },
     {
       path: "/organization-dashboard/settings",
       icon: faCog,
-      text: "Settings"
-    }
+      text: "Settings",
+    },
   ];
 
   const toggleSidebar = () => {
@@ -286,10 +291,14 @@ const OrganizationSidebar = ({ onToggle }) => {
                           icon={item.icon}
                           style={{ minWidth: "20px" }}
                         />
-                        {!collapsed && <span className="ms-3">{item.text}</span>}
+                        {!collapsed && (
+                          <span className="ms-3">{item.text}</span>
+                        )}
                       </div>
                       {!collapsed && item.badge && (
-                        <span className="badge bg-primary ms-2">{item.badge}</span>
+                        <span className="badge bg-primary ms-2">
+                          {item.badge}
+                        </span>
                       )}
                     </div>
                   </Link>
@@ -306,10 +315,10 @@ const OrganizationSidebar = ({ onToggle }) => {
                   <small className="text-uppercase text-light opacity-75">
                     Quick Access
                   </small>
-                  <Link 
+                  <Link
                     to="/organization-dashboard/organizations/new"
                     className="btn btn-sm btn-outline-light"
-                    style={{ fontSize: '0.7rem', padding: '0.2rem 0.5rem' }}
+                    style={{ fontSize: "0.7rem", padding: "0.2rem 0.5rem" }}
                     title="Create New Organization"
                   >
                     <FontAwesomeIcon icon={faPlus} />
@@ -343,7 +352,7 @@ const OrganizationSidebar = ({ onToggle }) => {
                           ? "rgba(255,255,255,0.1)"
                           : "transparent",
                         transition: "all 0.3s ease",
-                        fontSize: "0.9rem"
+                        fontSize: "0.9rem",
                       }}
                     >
                       <FontAwesomeIcon
@@ -371,7 +380,7 @@ const OrganizationSidebar = ({ onToggle }) => {
                         color: "var(--primary-color)",
                         textDecoration: "none",
                         fontSize: "0.85rem",
-                        opacity: 0.8
+                        opacity: 0.8,
                       }}
                     >
                       <span className="ms-3">
@@ -422,10 +431,14 @@ const OrganizationSidebar = ({ onToggle }) => {
                           icon={item.icon}
                           style={{ minWidth: "20px" }}
                         />
-                        {!collapsed && <span className="ms-3">{item.text}</span>}
+                        {!collapsed && (
+                          <span className="ms-3">{item.text}</span>
+                        )}
                       </div>
                       {!collapsed && item.badge && (
-                        <span className="badge bg-danger ms-2">{item.badge}</span>
+                        <span className="badge bg-danger ms-2">
+                          {item.badge}
+                        </span>
                       )}
                     </div>
                   </Link>

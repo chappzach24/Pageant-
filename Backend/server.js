@@ -70,6 +70,7 @@ app.use('/api/organizations', require('./routes/api/organizations'));
 app.use('/api/pageants', require('./routes/api/pageants'));
 app.use('/api/participants', require('./routes/api/participants'));
 app.use('/api/contestant-profiles', require('./routes/api/contestantProfile'));
+// app.use('/api/scoring', require('./routes/api/scoring'));
 
 // Handle production - serve React app
 if (process.env.NODE_ENV === 'production') {
