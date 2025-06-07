@@ -2,384 +2,320 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-  faAward,
   faTrophy,
   faUsers,
-  faChartLine,
+  faClipboardList,
+  faChartBar,
   faCalendarAlt,
-  faPlay,
-  faPause,
-  faStop,
   faEye,
-  faEdit,
   faDownload,
-  faPlus,
+  faCheckCircle,
+  faClock,
   faExclamationTriangle
 } from '@fortawesome/free-solid-svg-icons';
+import { DashboardPageHeader, LoadingSpinner, EmptyState, SearchFilterBar } from '../../components/dashboard/common';
 
 const ScoringDashboard = () => {
   const [pageants, setPageants] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [sortBy, setSortBy] = useState('startDate');
 
+  // Fetch pageants for scoring
   useEffect(() => {
+    const fetchPageants = async () => {
+      try {
+        const response = await fetch(
+          `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/scoring/pageants`,
+          {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+              'Accept': 'application/json',
+            },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch pageants');
+        }
+
+        const data = await response.json();
+        setPageants(data.pageants || []);
+      } catch (error) {
+        console.error('Error fetching pageants:', error);
+        setError(error.message || 'Failed to fetch pageants');
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchPageants();
   }, []);
 
-  const fetchPageants = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      // Use the new scoring endpoint that handles all the logic
-      const response = await fetch('/api/scoring/pageants', {
-        method: 'GET',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      if (!response.ok) {
-        if (response.status === 401) {
-          throw new Error('Please log in to view scoring dashboard');
-        } else if (response.status === 403) {
-          throw new Error('You do not have permission to view scoring data');
-        } else {
-          throw new Error(`Failed to fetch pageants: ${response.status}`);
-        }
+  // Filter and sort pageants
+  const filteredPageants = pageants
+    .filter(pageant => {
+      const matchesSearch = pageant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           pageant.organization?.name?.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesFilter = filterStatus === 'all' || pageant.scoringStatus === filterStatus;
+      return matchesSearch && matchesFilter;
+    })
+    .sort((a, b) => {
+      switch (sortBy) {
+        case 'name':
+          return a.name.localeCompare(b.name);
+        case 'startDate':
+          return new Date(b.startDate) - new Date(a.startDate);
+        case 'contestants':
+          return b.totalContestants - a.totalContestants;
+        case 'progress':
+          return b.categoriesCompleted - a.categoriesCompleted;
+        default:
+          return 0;
       }
-      
-      const data = await response.json();
-      
-      if (!data.success) {
-        throw new Error(data.error || 'Failed to load pageants');
-      }
-      
-      setPageants(data.pageants || []);
-    } catch (err) {
-      console.error('Error fetching pageants:', err);
-      setError(err.message || 'Failed to load pageants');
-    } finally {
-      setLoading(false);
-    }
-  };
+    });
 
+  // Get status badge
   const getStatusBadge = (status) => {
     const statusConfig = {
-      'in-progress': { class: 'bg-success', text: 'In Progress' },
-      'published': { class: 'bg-primary', text: 'Published' },
-      'completed': { class: 'bg-secondary', text: 'Completed' },
-      'draft': { class: 'bg-warning text-dark', text: 'Draft' },
-      'cancelled': { class: 'bg-danger', text: 'Cancelled' }
+      pending: { bg: 'bg-secondary', icon: faClock, text: 'Pending' },
+      active: { bg: 'bg-success', icon: faCheckCircle, text: 'Active' },
+      completed: { bg: 'bg-primary', icon: faTrophy, text: 'Completed' }
     };
-    
-    const config = statusConfig[status] || { class: 'bg-secondary', text: 'Unknown' };
-    return <span className={`badge ${config.class}`}>{config.text}</span>;
-  };
 
-  const getScoringStatusBadge = (status) => {
-    const statusConfig = {
-      'active': { class: 'bg-success', text: 'Scoring Active', icon: faPlay },
-      'paused': { class: 'bg-warning text-dark', text: 'Paused', icon: faPause },
-      'completed': { class: 'bg-info', text: 'Scoring Complete', icon: faStop },
-      'pending': { class: 'bg-secondary', text: 'Not Started', icon: faCalendarAlt }
-    };
-    
-    const config = statusConfig[status] || { class: 'bg-secondary', text: 'Unknown' };
+    const config = statusConfig[status] || statusConfig.pending;
     return (
-      <span className={`badge ${config.class} d-flex align-items-center`}>
+      <span className={`badge ${config.bg} me-2`}>
         <FontAwesomeIcon icon={config.icon} className="me-1" />
         {config.text}
       </span>
     );
   };
 
-  const formatDate = (dateString) => {
-    const options = { month: 'short', day: 'numeric', year: 'numeric' };
-    return new Date(dateString).toLocaleDateString(undefined, options);
-  };
-
+  // Get progress percentage
   const getProgressPercentage = (completed, total) => {
     if (total === 0) return 0;
     return Math.round((completed / total) * 100);
   };
 
-  const handleViewScores = (pageantId) => {
-    // Navigate to scores view
-    window.location.href = `/organization-dashboard/scoring/pageant/${pageantId}/scores`;
+  // Get progress bar color
+  const getProgressColor = (percentage) => {
+    if (percentage === 100) return 'bg-success';
+    if (percentage >= 50) return 'bg-warning';
+    return 'bg-danger';
   };
 
-  const handleManageScoring = (pageantId) => {
-    // Navigate to scoring management
-    window.location.href = `/organization-dashboard/scoring/pageant/${pageantId}/manage`;
-  };
-
-  const handleLiveScoring = (pageantId) => {
-    // Navigate to live scoring interface
-    window.location.href = `/organization-dashboard/scoring/pageant/${pageantId}/live`;
-  };
-
-  const handleExportResults = async () => {
-    try {
-      // You can implement export functionality here
-      alert('Export functionality will be implemented soon');
-    } catch (error) {
-      console.error('Export error:', error);
-      alert('Failed to export results');
-    }
+  // Format date
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString(undefined, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
   };
 
   if (loading) {
-    return (
-      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '400px' }}>
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner text="Loading scoring dashboard..." />;
   }
 
   if (error) {
     return (
-      <div className="alert alert-danger" role="alert">
-        <FontAwesomeIcon icon={faExclamationTriangle} className="me-2" />
-        {error}
+      <div className="container-fluid">
+        <DashboardPageHeader
+          title="Scoring & Results"
+          subtitle="Manage scoring for your pageants"
+        />
+        <div className="alert alert-danger" role="alert">
+          <FontAwesomeIcon icon={faExclamationTriangle} className="me-2" />
+          {error}
+        </div>
       </div>
     );
   }
 
-  // Calculate stats
-  const activeScoring = pageants.filter(p => p.scoringStatus === 'active').length;
-  const totalContestants = pageants.reduce((sum, p) => sum + (p.totalContestants || 0), 0);
-  const completedPageants = pageants.filter(p => p.scoringStatus === 'completed').length;
-
   return (
-    <div className="scoring-dashboard">
-      {/* Page Header */}
-      <div className="page-header mb-4">
-        <div className="d-flex justify-content-between align-items-center">
-          <div>
-            <h2 className="mb-1">
-              <FontAwesomeIcon icon={faAward} className="me-3 text-warning" />
-              Scoring & Results Dashboard
-            </h2>
-            <p className="text-muted">Manage pageant scoring, view results, and track progress</p>
-          </div>
-          <div className="d-flex gap-2">
-            <button className="btn btn-outline-primary" onClick={handleExportResults}>
-              <FontAwesomeIcon icon={faDownload} className="me-2" />
-              Export Results
-            </button>
-            <Link to="/organization-dashboard/scoring/live" className="btn btn-primary">
-              <FontAwesomeIcon icon={faPlay} className="me-2" />
-              Start Live Scoring
-            </Link>
-          </div>
-        </div>
-      </div>
+    <div className="container-fluid">
+      <DashboardPageHeader
+        title="Scoring & Results"
+        subtitle="Manage scoring for your pageants and view results"
+      />
 
-      {/* Stats Cards */}
-      <div className="row g-4 mb-4">
-        <div className="col-md-3">
-          <div className="card bg-light h-100">
-            <div className="card-body text-center">
-              <FontAwesomeIcon icon={faTrophy} size="2x" className="text-warning mb-2" />
-              <div className="h3 mb-1">{pageants.length}</div>
-              <div className="text-muted">Total Pageants</div>
-            </div>
-          </div>
-        </div>
-        <div className="col-md-3">
-          <div className="card bg-light h-100">
-            <div className="card-body text-center">
-              <FontAwesomeIcon icon={faPlay} size="2x" className="text-success mb-2" />
-              <div className="h3 mb-1">{activeScoring}</div>
-              <div className="text-muted">Active Scoring</div>
-            </div>
-          </div>
-        </div>
-        <div className="col-md-3">
-          <div className="card bg-light h-100">
-            <div className="card-body text-center">
-              <FontAwesomeIcon icon={faUsers} size="2x" className="text-info mb-2" />
-              <div className="h3 mb-1">{totalContestants}</div>
-              <div className="text-muted">Total Contestants</div>
-            </div>
-          </div>
-        </div>
-        <div className="col-md-3">
-          <div className="card bg-light h-100">
-            <div className="card-body text-center">
-              <FontAwesomeIcon icon={faChartLine} size="2x" className="text-primary mb-2" />
-              <div className="h3 mb-1">{completedPageants}</div>
-              <div className="text-muted">Completed</div>
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* Search and Filter */}
+      <SearchFilterBar
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        filterOptions={[
+          { value: 'all', label: 'All Pageants' },
+          { value: 'pending', label: 'Pending' },
+          { value: 'active', label: 'Active Scoring' },
+          { value: 'completed', label: 'Completed' }
+        ]}
+        sortOptions={[
+          { value: 'startDate', label: 'Date (Newest)' },
+          { value: 'name', label: 'Name (A-Z)' },
+          { value: 'contestants', label: 'Most Contestants' },
+          { value: 'progress', label: 'Most Progress' }
+        ]}
+        selectedFilter={filterStatus}
+        onFilterChange={setFilterStatus}
+        selectedSort={sortBy}
+        onSortChange={setSortBy}
+        placeholder="Search pageants..."
+      />
 
-      {/* Active Pageants */}
-      <div className="card shadow-sm">
-        <div className="card-header bg-light d-flex justify-content-between align-items-center">
-          <h5 className="mb-0">Pageant Scoring Status</h5>
-          <Link to="/organization-dashboard/organizations" className="btn btn-sm btn-outline-primary">
-            <FontAwesomeIcon icon={faPlus} className="me-1" />
-            New Pageant
-          </Link>
-        </div>
-        <div className="card-body p-0">
-          {pageants.length === 0 ? (
-            <div className="text-center py-5">
-              <FontAwesomeIcon icon={faTrophy} size="3x" className="text-muted mb-3" />
-              <h4>No Pageants Available for Scoring</h4>
-              <p className="text-muted">Create a pageant to start managing scores and results</p>
+      {/* Pageants List */}
+      {filteredPageants.length === 0 ? (
+        <EmptyState
+          icon={faTrophy}
+          title="No Pageants Found"
+          message={searchTerm || filterStatus !== 'all' 
+            ? "No pageants match your current search or filter criteria."
+            : "You don't have any pageants yet. Create your first pageant to get started with scoring."
+          }
+          actionButton={
+            !searchTerm && filterStatus === 'all' && (
               <Link to="/organization-dashboard/organizations" className="btn btn-primary">
-                <FontAwesomeIcon icon={faPlus} className="me-2" />
-                Create Your First Pageant
+                <FontAwesomeIcon icon={faTrophy} className="me-2" />
+                Create First Pageant
               </Link>
-            </div>
-          ) : (
-            <div className="table-responsive">
-              <table className="table table-hover mb-0">
-                <thead className="table-light">
-                  <tr>
-                    <th>Pageant</th>
-                    <th>Status</th>
-                    <th>Dates</th>
-                    <th>Progress</th>
-                    <th>Contestants</th>
-                    <th>Scoring Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {pageants.map((pageant) => (
-                    <tr key={pageant._id}>
-                      <td>
-                        <div className="d-flex align-items-center">
-                          <FontAwesomeIcon icon={faTrophy} className="me-3 text-warning" />
-                          <div>
-                            <div className="fw-bold">{pageant.name}</div>
-                            {pageant.currentCategory && (
-                              <small className="text-muted">Current: {pageant.currentCategory}</small>
-                            )}
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        {getStatusBadge(pageant.status)}
-                      </td>
-                      <td>
-                        <div className="d-flex align-items-center">
-                          <FontAwesomeIcon icon={faCalendarAlt} className="me-2 text-muted" />
-                          <div>
-                            <div>{formatDate(pageant.startDate)}</div>
-                            <small className="text-muted">to {formatDate(pageant.endDate)}</small>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="progress-container">
-                          <div className="d-flex justify-content-between align-items-center mb-1">
-                            <small className="text-muted">Categories</small>
-                            <small className="text-muted">
-                              {pageant.categoriesCompleted || 0}/{pageant.totalCategories || 0}
-                            </small>
-                          </div>
-                          <div className="progress" style={{ height: '6px' }}>
-                            <div 
-                              className="progress-bar bg-success" 
-                              role="progressbar" 
-                              style={{ width: `${getProgressPercentage(pageant.categoriesCompleted || 0, pageant.totalCategories || 0)}%` }}
-                            ></div>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="d-flex align-items-center">
-                          <FontAwesomeIcon icon={faUsers} className="me-2 text-muted" />
-                          <span>{pageant.totalContestants || 0}</span>
-                        </div>
-                      </td>
-                      <td>
-                        {getScoringStatusBadge(pageant.scoringStatus || 'pending')}
-                      </td>
-                      <td>
-                        <div className="btn-group">
-                          <button 
-                            className="btn btn-sm btn-outline-primary"
-                            title="View Scores"
-                            onClick={() => handleViewScores(pageant._id)}
-                          >
-                            <FontAwesomeIcon icon={faEye} />
-                          </button>
-                          <button 
-                            className="btn btn-sm btn-outline-secondary"
-                            title="Manage Scoring"
-                            onClick={() => handleManageScoring(pageant._id)}
-                          >
-                            <FontAwesomeIcon icon={faEdit} />
-                          </button>
-                          {pageant.scoringStatus === 'active' && (
-                            <button 
-                              className="btn btn-sm btn-success"
-                              title="Live Scoring"
-                              onClick={() => handleLiveScoring(pageant._id)}
-                            >
-                              <FontAwesomeIcon icon={faPlay} />
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      </div>
+            )
+          }
+        />
+      ) : (
+        <div className="row g-4">
+          {filteredPageants.map((pageant) => (
+            <div className="col-md-6 col-lg-4" key={pageant._id}>
+              <div className="card h-100 shadow-sm">
+                <div className="card-header d-flex justify-content-between align-items-center">
+                  <h6 className="card-title mb-0">{pageant.name}</h6>
+                  {getStatusBadge(pageant.scoringStatus)}
+                </div>
+                <div className="card-body d-flex flex-column">
+                  <div className="mb-3">
+                    <div className="small text-muted mb-1">Organization</div>
+                    <div className="fw-medium">{pageant.organization?.name || 'Unknown'}</div>
+                  </div>
 
-      {/* Quick Actions */}
-      <div className="row g-4 mt-4">
-        <div className="col-md-4">
-          <div className="card h-100 border-0 shadow-sm">
-            <div className="card-body text-center">
-              <FontAwesomeIcon icon={faPlay} size="3x" className="text-success mb-3" />
-              <h5>Start Live Scoring</h5>
-              <p className="text-muted">Begin real-time scoring for active pageants</p>
-              <Link to="/organization-dashboard/scoring/live" className="btn btn-success">
-                Launch Scoring Interface
-              </Link>
+                  <div className="mb-3">
+                    <div className="small text-muted mb-1">Event Date</div>
+                    <div className="d-flex align-items-center">
+                      <FontAwesomeIcon icon={faCalendarAlt} className="me-2 text-muted" />
+                      {formatDate(pageant.startDate)}
+                    </div>
+                  </div>
+
+                  <div className="row mb-3">
+                    <div className="col-6">
+                      <div className="text-center p-2 bg-light rounded">
+                        <div className="h5 mb-0 text-primary">{pageant.totalContestants}</div>
+                        <small className="text-muted">Contestants</small>
+                      </div>
+                    </div>
+                    <div className="col-6">
+                      <div className="text-center p-2 bg-light rounded">
+                        <div className="h5 mb-0 text-info">{pageant.totalCategories}</div>
+                        <small className="text-muted">Categories</small>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mb-3">
+                    <div className="d-flex justify-content-between align-items-center mb-2">
+                      <span className="small text-muted">Scoring Progress</span>
+                      <span className="small">
+                        {pageant.categoriesCompleted}/{pageant.totalCategories}
+                      </span>
+                    </div>
+                    <div className="progress" style={{ height: '8px' }}>
+                      <div
+                        className={`progress-bar ${getProgressColor(getProgressPercentage(pageant.categoriesCompleted, pageant.totalCategories))}`}
+                        role="progressbar"
+                        style={{ width: `${getProgressPercentage(pageant.categoriesCompleted, pageant.totalCategories)}%` }}
+                      ></div>
+                    </div>
+                  </div>
+
+                  <div className="mt-auto">
+                    <div className="d-grid gap-2">
+                      <Link
+                        to={`/organization-dashboard/scoring/pageant/${pageant._id}`}
+                        className="btn btn-primary"
+                      >
+                        <FontAwesomeIcon icon={faClipboardList} className="me-2" />
+                        {pageant.scoringStatus === 'completed' ? 'View Results' : 'Manage Scoring'}
+                      </Link>
+                      
+                      {pageant.scoringStatus === 'completed' && (
+                        <div className="btn-group">
+                          <Link
+                            to={`/organization-dashboard/scoring/pageant/${pageant._id}/results`}
+                            className="btn btn-outline-primary btn-sm"
+                          >
+                            <FontAwesomeIcon icon={faChartBar} className="me-1" />
+                            Results
+                          </Link>
+                          <button
+                            className="btn btn-outline-secondary btn-sm"
+                            onClick={() => {
+                              // Handle export functionality
+                              console.log('Export results for', pageant._id);
+                            }}
+                          >
+                            <FontAwesomeIcon icon={faDownload} className="me-1" />
+                            Export
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Statistics Summary */}
+      {filteredPageants.length > 0 && (
+        <div className="row mt-5">
+          <div className="col-12">
+            <div className="card">
+              <div className="card-header">
+                <h6 className="card-title mb-0">Summary Statistics</h6>
+              </div>
+              <div className="card-body">
+                <div className="row text-center">
+                  <div className="col-md-3">
+                    <div className="h4 text-primary mb-1">{filteredPageants.length}</div>
+                    <div className="small text-muted">Total Pageants</div>
+                  </div>
+                  <div className="col-md-3">
+                    <div className="h4 text-success mb-1">
+                      {filteredPageants.filter(p => p.scoringStatus === 'completed').length}
+                    </div>
+                    <div className="small text-muted">Completed</div>
+                  </div>
+                  <div className="col-md-3">
+                    <div className="h4 text-warning mb-1">
+                      {filteredPageants.filter(p => p.scoringStatus === 'active').length}
+                    </div>
+                    <div className="small text-muted">Active Scoring</div>
+                  </div>
+                  <div className="col-md-3">
+                    <div className="h4 text-info mb-1">
+                      {filteredPageants.reduce((sum, p) => sum + p.totalContestants, 0)}
+                    </div>
+                    <div className="small text-muted">Total Contestants</div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-        <div className="col-md-4">
-          <div className="card h-100 border-0 shadow-sm">
-            <div className="card-body text-center">
-              <FontAwesomeIcon icon={faChartLine} size="3x" className="text-info mb-3" />
-              <h5>View Results</h5>
-              <p className="text-muted">Review completed pageant results and rankings</p>
-              <Link to="/organization-dashboard/scoring/results" className="btn btn-info text-white">
-                View All Results
-              </Link>
-            </div>
-          </div>
-        </div>
-        <div className="col-md-4">
-          <div className="card h-100 border-0 shadow-sm">
-            <div className="card-body text-center">
-              <FontAwesomeIcon icon={faDownload} size="3x" className="text-warning mb-3" />
-              <h5>Export Data</h5>
-              <p className="text-muted">Download scores, results, and analytics</p>
-              <button className="btn btn-warning" onClick={handleExportResults}>
-                Export Reports
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+      )}
     </div>
   );
 };
