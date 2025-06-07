@@ -66,6 +66,10 @@ const OrganizationSidebar = ({ onToggle }) => {
     }
   }, [collapsed, onToggle]);
 
+  useEffect(() => {
+    // console.log(`${organizations[0]._id}`)
+  })
+
   const handleLogout = async () => {
     try {
       await logout();
@@ -90,7 +94,7 @@ const OrganizationSidebar = ({ onToggle }) => {
       badge: organizations.length > 0 ? organizations.length : null,
     },
     {
-      path: "/organization-dashboard/pageants",
+      path: `/organization-dashboard/${organizations[0]?._id}/pageants`,
       icon: faTrophy,
       text: "All Pageants",
     },
@@ -100,7 +104,7 @@ const OrganizationSidebar = ({ onToggle }) => {
       text: "Scoring & Results",
     },
     {
-      path: "/organization-dashboard/participants",
+      path: `/organization-dashboard/${organizations[0]?._id}/participants`,
       icon: faUsers,
       text: "Participants",
     },
@@ -110,7 +114,7 @@ const OrganizationSidebar = ({ onToggle }) => {
       text: "Judges",
     },
     {
-      path: "/organization-dashboard/reports",
+      path: `/organization-dashboard/${organizations[0]?._id}/reports`,
       icon: faChartBar,
       text: "Reports & Analytics",
     },

@@ -27,14 +27,14 @@ export const AuthProvider = ({ children }) => {
   const [backendAvailable, setBackendAvailable] = useState(true);
 
   // Get the API base URL
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  // const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
   // Check if user is logged in on initial load
   useEffect(() => {
     const checkLoggedIn = async () => {
       try {
         // First check if backend is available
-        const pingResponse = await fetch('/', {
+        const pingResponse = await fetch(`${API_URL}`, {
           method: 'GET',
           headers: {
             'Accept': 'application/json',
@@ -53,7 +53,7 @@ export const AuthProvider = ({ children }) => {
 
         setBackendAvailable(true);
         
-        const response = await fetch('/api/auth/me', {
+        const response = await fetch(`${API_URL}/api/auth/me`, {
           credentials: 'include',
           headers: {
             'Accept': 'application/json',

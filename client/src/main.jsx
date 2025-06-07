@@ -30,6 +30,10 @@ import PageantManagement from "./pages/dashboard/PageantManagement.jsx";
 import AddPageant from "./pages/dashboard/AddPageant.jsx";
 import ScoringDashboard from "./pages/dashboard/ScoringDashboard.jsx";
 
+import OrganizationParticipants from "./pages/dashboard/OrganizationParticipants.jsx";
+import OrganizationReports from "./pages/dashboard/OrganizationReports.jsx";
+
+
 const router = createBrowserRouter([
   {
     path: "/",
@@ -79,7 +83,7 @@ const router = createBrowserRouter([
               },
               // Protected organization-specific routes - users can only access their own organizations
               {
-                path: "organizations/:organizationId",
+                path: ":organizationId",
                 element: <OrganizationOwnerCheck />,
                 children: [
                   {
@@ -89,6 +93,14 @@ const router = createBrowserRouter([
                   {
                     path: "pageants/new",
                     element: <AddPageant />,
+                  },
+                  {
+                    path: 'participants',
+                    element: <OrganizationParticipants />
+                  },
+                  {
+                    path: 'reports',
+                    element: <OrganizationReports />,
                   },
                 ],
               },
