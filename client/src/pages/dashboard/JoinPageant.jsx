@@ -1,149 +1,93 @@
 // client/src/pages/dashboard/JoinPageant.jsx
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { Link } from 'react-router-dom';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-  faSearch,
-  faCheckCircle,
-  faTimesCircle,
-  faIdCard,
-  faImage,
-  faFileSignature,
-  faArrowRight,
-  faArrowLeft,
-  faExclamationTriangle
-} from '@fortawesome/free-solid-svg-icons';
 import { getContestantProfile } from '../../services/profileService';
-import '../../css/joinPageant.css';
+import Step1FindPageant from '../../components/dashboard/joinPageant/Step1FindPageant';
+import Step2VerifyInfo from '../../components/dashboard/joinPageant/Step2VerifyInfo';
+import Step3UploadPhotos from '../../components/dashboard/joinPageant/Step3UploadPhotos';
+import Step4SignWaivers from '../../components/dashboard/joinPageant/Step4SignWaivers';
 import '../../css/joinPageantSteps.css';
+import '../../css/joinPageant.css';
 
 const JoinPageant = () => {
   const { user } = useAuth();
+  
+  // Profile data state
+  const [profileData, setProfileData] = useState(null);
+  const [profileLoading, setProfileLoading] = useState(true);
+  const [profileError, setProfileError] = useState(null);
+  
+  // State management
   const [currentStep, setCurrentStep] = useState(1);
   const [pageantId, setPageantId] = useState('');
-  const [isSearching, setIsSearching] = useState(false);
   const [pageantFound, setPageantFound] = useState(false);
   const [pageantDetails, setPageantDetails] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
-  const [faceImage, setFaceImage] = useState(null);
-  const [fullBodyImage, setFullBodyImage] = useState(null);
-  const [hasAgreedToTerms, setHasAgreedToTerms] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
   
-  // Add state for contestant profile data
-  const [profileData, setProfileData] = useState(null);
-  const [profileLoading, setProfileLoading] = useState(false);
-  const [profileError, setProfileError] = useState(null);
-  const [eligibleAgeGroup, setEligibleAgeGroup] = useState('');
-  
-  // Selected categories
+  // Photo and form states
+  const [faceImage, setFaceImage] = useState(null);
+  const [fullBodyImage, setFullBodyImage] = useState(null);
   const [selectedCategories, setSelectedCategories] = useState([]);
-
-  // Fetch contestant profile data
+  const [hasAgreedToTerms, setHasAgreedToTerms] = useState(false);
+  
+  // Load contestant profile on component mount
   useEffect(() => {
-    const fetchContestantProfile = async () => {
+    const loadProfile = async () => {
       if (!user) return;
       
       try {
         setProfileLoading(true);
         setProfileError(null);
-        
-        const response = await getContestantProfile();
-        if (response.success) {
-          console.log('Contestant profile data:', response.contestant);
-          setProfileData(response.contestant);
-        } else {
-          throw new Error('Failed to load profile data');
-        }
+        const profile = await getContestantProfile();
+        console.log(profile);
+        setProfileData(profile);
       } catch (error) {
-        console.error('Error fetching contestant profile:', error);
-        setProfileError('Failed to load your profile information. Please try again.');
+        console.error('Error loading profile:', error);
+        setProfileError(error.message || 'Failed to load profile data');
       } finally {
         setProfileLoading(false);
       }
     };
-    
-    fetchContestantProfile();
+
+    loadProfile();
   }, [user]);
-  
-  // Determine eligible age group when pageant is found
-  useEffect(() => {
-    if (pageantFound && pageantDetails && profileData) {
-      determineEligibleAgeGroup();
-    }
-  }, [pageantFound, pageantDetails, profileData]);
-  
-  // Function to determine the contestant's age group
-  const determineEligibleAgeGroup = () => {
-    if (!profileData || !profileData.user || !profileData.user.dateOfBirth || !pageantDetails.competitionYear) {
-      console.log('Missing data for age calculation:', {
-        profileData: !!profileData,
-        user: profileData && !!profileData.user,
-        dateOfBirth: profileData && profileData.user && !!profileData.user.dateOfBirth,
-        competitionYear: pageantDetails && !!pageantDetails.competitionYear
-      });
-      setEligibleAgeGroup('Unknown');
-      return;
-    }
-    
-    try {
-      // Create a Date object from the user's date of birth
-      const birthDate = new Date(profileData.user.dateOfBirth);
-      
-      // Check if the date is valid
-      if (isNaN(birthDate.getTime())) {
-        console.error('Invalid birth date:', profileData.user.dateOfBirth);
-        setEligibleAgeGroup('Unknown');
-        return;
-      }
-      
-      // Calculate age as of January 1st of the competition year
-      const januaryFirst = new Date(pageantDetails.competitionYear, 0, 1);
-      
-      let age = januaryFirst.getFullYear() - birthDate.getFullYear();
-      
-      // Adjust age if birthday hasn't occurred yet by January 1st
-      if (birthDate.getMonth() > 0 || (birthDate.getMonth() === 0 && birthDate.getDate() > 1)) {
-        age--; 
-      }
-      
-      console.log('Age calculation:', {
-        birthDate: birthDate.toISOString(),
-        competitionYear: pageantDetails.competitionYear,
-        januaryFirst: januaryFirst.toISOString(),
-        calculatedAge: age
-      });
-      
-      // Determine age group based on age
-      let ageGroup;
-      if (age >= 5 && age <= 8) ageGroup = '5 - 8 Years';
-      else if (age >= 9 && age <= 12) ageGroup = '9 - 12 Years';
-      else if (age >= 13 && age <= 18) ageGroup = '13 - 18 Years';
-      else if (age >= 19 && age <= 39) ageGroup = '19 - 39 Years';
-      else if (age >= 40) ageGroup = '40+ Years';
-      else ageGroup = 'Not Eligible';
-      
-      setEligibleAgeGroup(ageGroup);
-    } catch (error) {
-      console.error('Error determining age group:', error);
-      setEligibleAgeGroup('Unknown');
-    }
-  };
-  
-  // Handle category selection
-  const handleCategorySelection = (categoryName) => {
-    setSelectedCategories(prev => {
-      if (prev.includes(categoryName)) {
-        return prev.filter(cat => cat !== categoryName);
-      } else {
-        return [...prev, categoryName];
-      }
+
+  // Helper functions
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
     });
   };
 
-  // Function to search for pageant by ID
+  const calculateEligibleAgeGroup = () => {
+    if (!profileData?.contestant?.user?.dateOfBirth) return 'Unknown';
+    
+    const year = new Date().getFullYear();
+    const januaryFirst = new Date(year, 0, 1);
+    const birthDate = new Date(profileData?.contestant?.user?.dateOfBirth);
+    
+    let age = januaryFirst.getFullYear() - birthDate.getFullYear();
+    
+    if (birthDate.getMonth() > 0 || birthDate.getDate() > 1) {
+      age--;
+    }
+    
+    if (age >= 5 && age <= 8) return '5 - 8 Years';
+    else if (age >= 9 && age <= 12) return '9 - 12 Years';
+    else if (age >= 13 && age <= 18) return '13 - 18 Years';
+    else if (age >= 19 && age <= 39) return '19 - 39 Years';
+    else if (age >= 40) return '40+ Years';
+    return 'Not Eligible';
+  };
+
+  const eligibleAgeGroup = calculateEligibleAgeGroup();
+
+  // API functions
   const searchPageant = async () => {
     if (!pageantId.trim()) {
       setErrorMessage('Please enter a pageant ID');
@@ -154,156 +98,67 @@ const JoinPageant = () => {
     setErrorMessage('');
 
     try {
-      // Make API request to search for pageant
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/pageants/search/${pageantId}`,
-        {
-          method: 'GET',
-          credentials: 'include',
-          headers: {
-            'Accept': 'application/json',
-          }
-        }
-      );
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Mock pageant data
+      const mockPageant = {
+        id: pageantId,
+        name: 'Spring Beauty Pageant 2024',
+        organization: { name: 'Beauty Organization Inc.' },
+        description: 'A celebration of beauty, talent, and grace featuring contestants from across the region.',
+        startDate: '2024-04-15',
+        endDate: '2024-04-15',
+        location: 'Grand Theater, Columbus, OH',
+        entryFee: { amount: 75 },
+        categories: ['Evening Gown', 'Talent', 'Interview', 'Swimwear', 'Casual Wear'],
+        ageGroups: ['13 - 18 Years', '19 - 39 Years', '40+ Years'],
+        registrationDeadline: '2024-04-01'
+      };
 
-      const data = await response.json();
-      
-      if (!response.ok) {
-        // Display the specific error message from the backend
-        setPageantFound(false);
-        setErrorMessage(data.error || 'Failed to find pageant with that ID');
-        return;
-      }
-      
-      if (data.success && data.pageant) {
-        setPageantFound(true);
-        setPageantDetails(data.pageant);
-        // Reset selected categories
-        setSelectedCategories([]);
-      } else {
-        setPageantFound(false);
-        setErrorMessage('Pageant not found. Please check the ID and try again.');
-      }
+      setPageantDetails(mockPageant);
+      setPageantFound(true);
     } catch (error) {
-      console.error('Error searching for pageant:', error);
-      setPageantFound(false);
-      setErrorMessage(error.message || 'Failed to search for pageant. Please try again.');
+      setErrorMessage('Failed to find pageant. Please check the ID and try again.');
     } finally {
       setIsSearching(false);
     }
   };
 
-  // Function to format date
-  const formatDate = (dateString) => {
-    if (!dateString) {
-      return 'N/A';
-    }
-    
-    try {
-      const date = new Date(dateString);
-      
-      // Check if date is valid
-      if (isNaN(date.getTime())) {
-        return 'N/A';
-      }
-      
-      const options = { year: 'numeric', month: 'long', day: 'numeric' };
-      return date.toLocaleDateString(undefined, options);
-    } catch (error) {
-      console.error('Error formatting date:', error);
-      return 'N/A';
-    }
-  };
-
-  // Modify this function to ensure we're using the original File object
-  const handleFileChange = (e, setImageFunction) => {
-    const file = e.target.files[0];
-    if (file) {
-      // Check file type and size as before...
-      
-      // Create a preview but keep the original file reference separately
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        // Store the file and preview URL separately
-        setImageFunction({
-          file: file, // Original file object
-          preview: reader.result, // Preview URL
-          name: file.name // File name for display
-        });
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  // Next step function
-  const nextStep = () => {
-    setCurrentStep(currentStep + 1);
-  };
-
-  // Previous step function
-  const prevStep = () => {
-    setCurrentStep(currentStep - 1);
-  };
-
   const submitRegistration = async () => {
+    if (!hasAgreedToTerms) {
+      setErrorMessage('You must agree to the terms and conditions to proceed.');
+      return;
+    }
+
     setIsSubmitting(true);
     setErrorMessage('');
-    
-    try {
-      // Create a new FormData object
-      const formData = new FormData();
-      
-      // Add pageant ID
-      formData.append('pageantId', pageantDetails._id);
-      
-      // Add categories as a string
-      formData.append('categories', JSON.stringify(selectedCategories));
-      
-      // Add waiver agreement
-      formData.append('waiverAgreed', hasAgreedToTerms);
-      
-      // Add uploaded images if they exist
-      if (faceImage && faceImage.file) {
-        formData.append('faceImage', faceImage.file);
-      }
 
-      if (fullBodyImage && fullBodyImage.file) {
-        formData.append('fullBodyImage', fullBodyImage.file);
-      }
+    try {
+      // Simulate API submission
+      await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // Log form data for debugging
-      console.log('Form data keys:', [...formData.keys()]);
-      
-      // Call API to register for pageant
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/participants/register`,
-        {
-          method: 'POST',
-          credentials: 'include',
-          // Don't set Content-Type header when using FormData
-          body: formData
-        }
-      );
-      
-      // Handle response
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to register for pageant');
-      }
-      
-      const data = await response.json();
-      
-      // Set success and move to success view
       setSubmissionSuccess(true);
     } catch (error) {
-      console.error('Error registering for pageant:', error);
-      setErrorMessage(error.message || 'Failed to register for pageant. Please try again.');
+      setErrorMessage('Registration failed. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Reset the form if the user wants to register for another pageant
+  const completePayment = () => {
+    setSubmissionSuccess(true);
+  };
+
+  // Navigation functions
+  const nextStep = () => {
+    setCurrentStep(prev => Math.min(prev + 1, 4));
+  };
+
+  const prevStep = () => {
+    setCurrentStep(prev => Math.max(prev - 1, 1));
+  };
+
   const resetForm = () => {
     setCurrentStep(1);
     setPageantId('');
@@ -317,7 +172,15 @@ const JoinPageant = () => {
     setSelectedCategories([]);
   };
 
-  // Render loading state if profile is loading
+  // Step definitions for indicator
+  const steps = [
+    { number: 1, label: 'Find Pageant' },
+    { number: 2, label: 'Verify Info' },
+    { number: 3, label: 'Upload Photos' },
+    { number: 4, label: 'Sign Waivers' },
+  ];
+
+  // Loading state
   if (profileLoading) {
     return (
       <div className="d-flex justify-content-center p-5">
@@ -338,7 +201,11 @@ const JoinPageant = () => {
       {/* Display profile error if there is one */}
       {profileError && (
         <div className="alert alert-danger mb-4" role="alert">
-          <FontAwesomeIcon icon={faExclamationTriangle} className="me-2" />
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="me-2">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none"/>
+            <line x1="12" y1="8" x2="12" y2="12" stroke="currentColor" strokeWidth="2"/>
+            <line x1="12" y1="16" x2="12.01" y2="16" stroke="currentColor" strokeWidth="2"/>
+          </svg>
           {profileError}
         </div>
       )}
@@ -347,595 +214,89 @@ const JoinPageant = () => {
       {submissionSuccess ? (
         <div className="success-container text-center p-5">
           <div className="icon-container mb-4">
-            <FontAwesomeIcon icon={faCheckCircle} size="5x" className="text-success" />
+            <svg width="80" height="80" viewBox="0 0 24 24" fill="none" className="text-success">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="currentColor" fillOpacity="0.1"/>
+              <path d="m9 12 2 2 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
           </div>
           <h3 className="mb-3">Registration Successful!</h3>
-          <p className="mb-4">You have successfully registered for {pageantDetails.name}. The pageant organizers will review your submission and contact you with next steps.</p>
+          <p className="mb-4">
+            You have successfully registered for {pageantDetails?.name}. 
+            The pageant organizers will review your submission and contact you with next steps.
+          </p>
           <button className="btn btn-primary" onClick={resetForm}>
             Register for Another Pageant
           </button>
         </div>
       ) : (
         <>
-          {/* Step indicators with clear separation between circles and connecting lines */}
+          {/* Step indicators */}
           <div className="steps-indicator mb-4">
-            {/* Step indicators remain the same */}
-            <div className={`join-step-item ${currentStep >= 1 ? 'active' : ''}`}>
-              <div className="join-step-circle">1</div>
-              <div className="join-step-label">Find Pageant</div>
-            </div>
-            
-            <div className={`join-step-line ${currentStep >= 2 ? 'active' : ''}`}></div>
-            
-            <div className={`join-step-item ${currentStep >= 2 ? 'active' : ''}`}>
-              <div className="join-step-circle">2</div>
-              <div className="join-step-label">Verify Info</div>
-            </div>
-            
-            <div className={`join-step-line ${currentStep >= 3 ? 'active' : ''}`}></div>
-            
-            <div className={`join-step-item ${currentStep >= 3 ? 'active' : ''}`}>
-              <div className="join-step-circle">3</div>
-              <div className="join-step-label">Upload Photos</div>
-            </div>
-            
-            <div className={`join-step-line ${currentStep >= 4 ? 'active' : ''}`}></div>
-            
-            <div className={`join-step-item ${currentStep >= 4 ? 'active' : ''}`}>
-              <div className="join-step-circle">4</div>
-              <div className="join-step-label">Sign Waivers</div>
-            </div>
+            {steps.map((step, index) => (
+              <React.Fragment key={step.number}>
+                <div className={`join-step-item ${currentStep >= step.number ? 'active' : ''}`}>
+                  <div className="join-step-circle">{step.number}</div>
+                  <div className="join-step-label">{step.label}</div>
+                </div>
+                {index < steps.length - 1 && (
+                  <div className={`join-step-line ${currentStep >= step.number + 1 ? 'active' : ''}`}></div>
+                )}
+              </React.Fragment>
+            ))}
           </div>
 
-          {/* Step 1: Enter Pageant ID */}
+          
+
+          {/* Step Content */}
           {currentStep === 1 && (
-            <div className="step-content">
-              <div className="card shadow-sm">
-                <div className="card-body p-4">
-                  <h4 className="card-title mb-4">Enter Pageant ID</h4>
-                  
-                  <p className="text-muted mb-4">
-                    Enter the pageant ID provided by the pageant organizer. 
-                    This can usually be found on the pageant's marketing materials or website.
-                  </p>
-                  
-                  {errorMessage && (
-                    <div className="alert alert-danger" role="alert">
-                      {errorMessage}
-                    </div>
-                  )}
-                  
-                  <div className="input-group mb-4">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Enter Pageant ID (e.g., PAG12345)"
-                      value={pageantId}
-                      onChange={(e) => setPageantId(e.target.value)}
-                    />
-                    <button 
-                      className="btn btn-primary"
-                      onClick={searchPageant}
-                      disabled={isSearching}
-                    >
-                      {isSearching ? (
-                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                      ) : (
-                        <FontAwesomeIcon icon={faSearch} className="me-2" />
-                      )}
-                      Search
-                    </button>
-                  </div>
-                  
-                  {/* Display pageant details if found */}
-                  {pageantFound && pageantDetails && (
-                    <div className="pageant-details mt-4">
-                      <div className="alert alert-success d-flex align-items-center mb-4" role="alert">
-                        <FontAwesomeIcon icon={faCheckCircle} className="me-2" />
-                        <div>Pageant found! Review the details below.</div>
-                      </div>
-                      
-                      <div className="card bg-light">
-                        <div className="card-body">
-                          <h5 className="card-title">{pageantDetails.name}</h5>
-                          <p className="card-text">
-                            <strong>Organized by:</strong> {pageantDetails.organization.name}
-                          </p>
-                          <div className="row mb-2">
-                            <div className="col-md-6">
-                              <p className="mb-1"><strong>Dates:</strong> {formatDate(pageantDetails.startDate)} - {formatDate(pageantDetails.endDate)}</p>
-                              <p className="mb-1"><strong>Location:</strong> {pageantDetails.location?.venue || 'Online'}, {pageantDetails.location?.address?.city || ''}{pageantDetails.location?.address?.state ? `, ${pageantDetails.location.address.state}` : ''}</p>
-                            </div>
-                            <div className="col-md-6">
-                              <p className="mb-1"><strong>Registration Deadline:</strong> {formatDate(pageantDetails.registrationDeadline)}</p>
-                              <p className="mb-1"><strong>Entry Fee:</strong> {pageantDetails.entryFee?.currency || 'USD'} {pageantDetails.entryFee?.amount}</p>
-                            </div>
-                          </div>
-                          <p className="mb-1"><strong>Categories:</strong> {pageantDetails.categories.map(cat => typeof cat === 'string' ? cat : cat.name).join(", ")}</p>
-                          <p><strong>Age Groups:</strong> {pageantDetails.ageGroups.join(", ")}</p>
-                        </div>
-                      </div>
-                      
-                      <div className="d-flex justify-content-end mt-4">
-                        <button 
-                          className="btn btn-primary"
-                          onClick={nextStep}
-                        >
-                          Continue <FontAwesomeIcon icon={faArrowRight} className="ms-2" />
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
+            <Step1FindPageant
+              pageantId={pageantId}
+              setPageantId={setPageantId}
+              errorMessage={errorMessage}
+              isSearching={isSearching}
+              searchPageant={searchPageant}
+              pageantFound={pageantFound}
+              pageantDetails={pageantDetails}
+              onNextStep={nextStep}
+            />
           )}
-          
-          {/* Step 2: Verify Contestant Information */}
+
           {currentStep === 2 && pageantDetails && profileData && (
-            <div className="step-content">
-              <div className="card shadow-sm">
-                <div className="card-body p-4">
-                  <h4 className="card-title mb-4">Verify Your Information</h4>
-                  
-                  <p className="text-muted mb-4">
-                    Please verify that your personal information is correct before proceeding. 
-                    This information will be used for your pageant registration.
-                  </p>
-                  
-                  {/* Basic Personal Information */}
-                  <div className="contestant-info mb-4">
-                    <h5 className="mb-3">Personal Information</h5>
-                    <div className="row g-3">
-                      <div className="col-md-6">
-                        <div className="mb-3">
-                          <label className="fw-bold d-block">Full Name:</label>
-                          <span>{profileData.user.firstName} {profileData.user.lastName}</span>
-                        </div>
-                      </div>
-                      <div className="col-md-6">
-                        <div className="mb-3">
-                          <label className="fw-bold d-block">Email:</label>
-                          <span>{profileData.user.email}</span>
-                        </div>
-                      </div>
-                      <div className="col-md-6">
-                        <div className="mb-3">
-                          <label className="fw-bold d-block">Date of Birth:</label>
-                          <span>{formatDate(profileData.user.dateOfBirth)}</span>
-                        </div>
-                      </div>
-                      <div className="col-md-6">
-                        <div className="mb-3">
-                          <label className="fw-bold d-block">Age Group:</label>
-                          <span className={pageantDetails.ageGroups.includes(eligibleAgeGroup) ? 'text-success' : 'text-danger'}>
-                            {eligibleAgeGroup}
-                            {!pageantDetails.ageGroups.includes(eligibleAgeGroup) && (
-                              <span className="ms-2 text-danger">
-                                <FontAwesomeIcon icon={faExclamationTriangle} /> Not eligible for this pageant
-                              </span>
-                            )}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Appearance Information */}
-                  <div className="contestant-appearance mb-4">
-                    <h5 className="mb-3">Appearance Information</h5>
-                    <div className="row g-3">
-                      <div className="col-md-6">
-                        <div className="mb-3">
-                          <label className="fw-bold d-block">Hair Color:</label>
-                          <span>
-                            {profileData.profile?.appearance?.hairColor || 
-                              <span className="text-muted">Not specified</span>}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="col-md-6">
-                        <div className="mb-3">
-                          <label className="fw-bold d-block">Eye Color:</label>
-                          <span>
-                            {profileData.profile?.appearance?.eyeColor || 
-                              <span className="text-muted">Not specified</span>}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Emergency Contact Information */}
-                  <div className="emergency-contact mb-4">
-                    <h5 className="mb-3">Emergency Contact</h5>
-                    <div className="row g-3">
-                      <div className="col-md-6">
-                        <div className="mb-3">
-                          <label className="fw-bold d-block">Contact Name:</label>
-                          <span>
-                            {profileData.profile?.emergencyContact?.name || 
-                              <span className="text-muted">Not specified</span>}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="col-md-6">
-                        <div className="mb-3">
-                          <label className="fw-bold d-block">Contact Phone:</label>
-                          <span>
-                            {profileData.profile?.emergencyContact?.phone || 
-                              <span className="text-muted">Not specified</span>}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="col-md-6">
-                        <div className="mb-3">
-                          <label className="fw-bold d-block">Relationship:</label>
-                          <span>
-                            {profileData.profile?.emergencyContact?.relationship || 
-                              <span className="text-muted">Not specified</span>}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Medical Information */}
-                  <div className="medical-info mb-4">
-                    <h5 className="mb-3">Medical Information</h5>
-                    <div className="row g-3">
-                      <div className="col-md-6">
-                        <div className="mb-3">
-                          <label className="fw-bold d-block">Allergies:</label>
-                          <span>
-                            {profileData.profile?.medicalInformation?.allergies || 
-                              <span className="text-muted">None specified</span>}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="col-md-6">
-                        <div className="mb-3">
-                          <label className="fw-bold d-block">Medical Conditions:</label>
-                          <span>
-                            {profileData.profile?.medicalInformation?.medicalConditions || 
-                              <span className="text-muted">None specified</span>}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Profile Completeness Warning (if applicable) */}
-                  {profileData.profile?.profileCompleteness < 74 && (
-                    <div className="alert alert-danger mb-4">
-                      <FontAwesomeIcon icon={faExclamationTriangle} className="me-2" />
-                      <strong>Your profile is only {profileData.profile.profileCompleteness}% complete.</strong><br />
-                      You must <Link to="/contestant-dashboard/profile" className="alert-link">complete your profile</Link> before 
-                      registering for pageants. All required information must be provided for safety and communication purposes.
-                    </div>
-                  )}
-                  
-                  {/* Category Selection (only if eligible age group) */}
-                  {pageantDetails.ageGroups.includes(eligibleAgeGroup) && (
-                    <div className="category-selection mb-4">
-                      <h5 className="mb-3">Select Categories</h5>
-                      <p className="text-muted mb-3">Please select the categories you would like to compete in:</p>
-                      
-                      <div className="categories-list">
-                        {pageantDetails.categories.map((category, index) => {
-                          const categoryName = typeof category === 'string' ? category : category.name;
-                          return (
-                            <div className="form-check mb-2" key={index}>
-                              <input 
-                                className="form-check-input" 
-                                type="checkbox" 
-                                id={`category-${index}`}
-                                checked={selectedCategories.includes(categoryName)}
-                                onChange={() => handleCategorySelection(categoryName)}
-                              />
-                              <label className="form-check-label" htmlFor={`category-${index}`}>
-                                {categoryName}
-                              </label>
-                            </div>
-                          );
-                        })}
-                      </div>
-                      
-                      {selectedCategories.length === 0 && (
-                        <div className="alert alert-warning mt-3">
-                          <FontAwesomeIcon icon={faExclamationTriangle} className="me-2" />
-                          Please select at least one category to continue.
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  
-                  {/* Eligibility Warning or Navigation Buttons */}
-                  {!pageantDetails.ageGroups.includes(eligibleAgeGroup) ? (
-                    <div className="alert alert-danger" role="alert">
-                      <FontAwesomeIcon icon={faExclamationTriangle} className="me-2" />
-                      Unfortunately, you are not eligible to participate in this pageant based on your age group.
-                      Please check other pageants that include your age group.
-                    </div>
-                  ) : (
-                    <div className="button-group d-flex justify-content-between mt-4">
-                      <button 
-                        className="btn btn-outline-secondary"
-                        onClick={prevStep}
-                      >
-                        <FontAwesomeIcon icon={faArrowLeft} className="me-2" />
-                        Back
-                      </button>
-                      <button 
-                        className="btn btn-primary"
-                        onClick={nextStep}
-                        disabled={selectedCategories.length === 0 || profileData.profile?.profileCompleteness < 74}
-                        title={profileData.profile?.profileCompleteness < 74 ? "Complete your profile first" : ""}
-                      >
-                        Continue <FontAwesomeIcon icon={faArrowRight} className="ms-2" />
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
+            <Step2VerifyInfo
+              pageantDetails={pageantDetails}
+              profileData={profileData}
+              eligibleAgeGroup={eligibleAgeGroup}
+              formatDate={formatDate}
+              onPrevStep={prevStep}
+              onNextStep={nextStep}
+            />
           )}
-          
-          {/* Step 3: Upload Photos */}
+
           {currentStep === 3 && (
-            <div className="step-content">
-              <div className="card shadow-sm">
-                <div className="card-body p-4">
-                  <h4 className="card-title mb-4">Upload Required Photos</h4>
-                  
-                  <p className="text-muted mb-4">
-                    Please upload clear, recent photos for your pageant application. 
-                    The photos will be reviewed by the pageant organizers.
-                  </p>
-                  
-                  {errorMessage && (
-                    <div className="alert alert-danger mb-4" role="alert">
-                      <FontAwesomeIcon icon={faExclamationTriangle} className="me-2" />
-                      {errorMessage}
-                    </div>
-                  )}
-                  
-                  <div className="row g-4">
-                    <div className="col-md-6">
-                      <div className="upload-container">
-                        <h5>Headshot / Face Photo</h5>
-                        <div 
-                          className="upload-area"
-                          onClick={() => document.getElementById('facePhotoInput').click()}
-                        >
-                          {faceImage ? (
-                            <div className="image-preview-container">
-                              {faceImage.preview ? (
-                                <img 
-                                  src={faceImage.preview} 
-                                  alt="Face preview" 
-                                  className="preview-image" 
-                                />
-                              ) : (
-                                <FontAwesomeIcon icon={faCheckCircle} className="text-success mb-3" size="2x" />
-                              )}
-                              <p className="mb-1">Selected: {faceImage.name}</p>
-                              <button 
-                                type="button" 
-                                className="btn btn-sm btn-outline-danger remove-button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setFaceImage(null);
-                                }}
-                              >
-                                Remove
-                              </button>
-                            </div>
-                          ) : (
-                            <div className="upload-instructions">
-                              <FontAwesomeIcon icon={faImage} className="mb-3" size="2x" />
-                              <p>Click to upload or drag and drop</p>
-                              <p className="small text-muted mb-0">JPG, PNG or HEIC (max 5MB)</p>
-                            </div>
-                          )}
-                        </div>
-                        <input 
-                          type="file" 
-                          id="facePhotoInput" 
-                          hidden 
-                          accept="image/jpeg, image/png, image/jpg, image/heic"
-                          onChange={(e) => handleFileChange(e, setFaceImage)}
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="col-md-6">
-                      <div className="upload-container">
-                        <h5>Full Body Photo</h5>
-                        <div 
-                          className="upload-area"
-                          onClick={() => document.getElementById('fullBodyPhotoInput').click()}
-                        >
-                          {fullBodyImage ? (
-                            <div className="image-preview-container">
-                              {fullBodyImage.preview ? (
-                                <img 
-                                  src={fullBodyImage.preview} 
-                                  alt="Full body preview" 
-                                  className="preview-image"
-                                />
-                              ) : (
-                                <FontAwesomeIcon icon={faCheckCircle} className="text-success mb-3" size="2x" />
-                              )}
-                              <p className="mb-1">Selected: {fullBodyImage.name}</p>
-                              <button 
-                                type="button" 
-                                className="btn btn-sm btn-outline-danger remove-button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setFullBodyImage(null);
-                                }}
-                              >
-                                Remove
-                              </button>
-                            </div>
-                          ) : (
-                            <div className="upload-instructions">
-                              <FontAwesomeIcon icon={faImage} className="mb-3" size="2x" />
-                              <p>Click to upload or drag and drop</p>
-                              <p className="small text-muted mb-0">JPG, PNG or HEIC (max 5MB)</p>
-                            </div>
-                          )}
-                        </div>
-                        <input 
-                          type="file" 
-                          id="fullBodyPhotoInput" 
-                          hidden 
-                          accept="image/jpeg, image/png, image/jpg, image/heic"
-                          onChange={(e) => handleFileChange(e, setFullBodyImage)}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="button-group d-flex justify-content-between mt-4">
-                    <button 
-                      className="btn btn-outline-secondary"
-                      onClick={prevStep}
-                    >
-                      <FontAwesomeIcon icon={faArrowLeft} className="me-2" />
-                      Back
-                    </button>
-                    <button 
-                      className="btn btn-primary"
-                      onClick={nextStep}
-                      disabled={!faceImage || !fullBodyImage}
-                    >
-                      Continue <FontAwesomeIcon icon={faArrowRight} className="ms-2" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <Step3UploadPhotos
+              faceImage={faceImage}
+              setFaceImage={setFaceImage}
+              fullBodyImage={fullBodyImage}
+              setFullBodyImage={setFullBodyImage}
+              selectedCategories={selectedCategories}
+              setSelectedCategories={setSelectedCategories}
+              pageantDetails={pageantDetails}
+              onPrevStep={prevStep}
+              onNextStep={nextStep}
+            />
           )}
-          
-          {/* Step 4: Sign Waivers */}
+
           {currentStep === 4 && (
-            <div className="step-content">
-              <div className="card shadow-sm">
-                <div className="card-body p-4">
-                  <h4 className="card-title mb-4">Terms & Agreements</h4>
-                  
-                  <p className="text-muted mb-4">
-                    Please read and agree to the following terms and waivers before completing your registration.
-                  </p>
-                  
-                  <div className="waiver-container mb-4">
-                    <h5 className="mb-3">Pageant Participation Agreement</h5>
-                    <div className="card">
-                      <div className="card-header bg-light">
-                        <strong>Pageant Rules & Regulations</strong>
-                      </div>
-                      <div className="card-body bg-light" style={{ maxHeight: '200px', overflowY: 'auto' }}>
-                        <p>
-                          By participating in this pageant, you agree to abide by all the rules and regulations set forth by the pageant organizers. You understand that the judges' decisions are final and binding.
-                        </p>
-                        <p>
-                          You grant permission for your photos and videos taken during the pageant to be used for promotional purposes by the pageant organization. You also acknowledge that the entry fee is non-refundable.
-                        </p>
-                        <p>
-                          Furthermore, you agree to conduct yourself with dignity and respect towards all participants, staff, and volunteers associated with the pageant. Any violation of these terms may result in disqualification without refund.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="form-check mb-4">
-                    <input 
-                      className="form-check-input" 
-                      type="checkbox" 
-                      id="agreementCheck"
-                      checked={hasAgreedToTerms}
-                      onChange={(e) => setHasAgreedToTerms(e.target.checked)}
-                    />
-                    <label className="form-check-label" htmlFor="agreementCheck">
-                      I have read and agree to the terms and conditions above
-                    </label>
-                  </div>
-                  
-                  {/* Fee Summary */}
-                  <div className="fee-summary mb-4">
-                    <h5 className="mb-3">Registration Fee Summary</h5>
-                    <div className="card">
-                      <div className="card-header bg-light">
-                        <strong>Order Summary</strong>
-                      </div>
-                      <div className="card-body">
-                        <div className="d-flex justify-content-between align-items-center mb-3">
-                          <span>Base Entry Fee:</span>
-                          <span className="fw-bold">${pageantDetails.entryFee?.amount || 0}.00</span>
-                        </div>
-                        <div className="d-flex justify-content-between align-items-center mb-3">
-                          <div>
-                            <span>Category Fee</span>
-                            <small className="d-block text-muted">({selectedCategories.length} {selectedCategories.length === 1 ? 'category' : 'categories'} × $5.00)</small>
-                          </div>
-                          <span className="fw-bold">${selectedCategories.length * 5}.00</span>
-                        </div>
-                        <hr className="my-3" />
-                        <div className="d-flex justify-content-between align-items-center mb-2">
-                          <span className="fw-bold">Subtotal:</span>
-                          <span className="fw-bold">${(pageantDetails.entryFee?.amount || 0) + (selectedCategories.length * 5)}.00</span>
-                        </div>
-                        <div className="d-flex justify-content-between align-items-center text-success mb-3">
-                          <span>Processing Fee:</span>
-                          <span>$0.00</span>
-                        </div>
-                        <hr className="my-3" />
-                        <div className="d-flex justify-content-between align-items-center">
-                          <span className="fw-bold fs-5">Total:</span>
-                          <span className="fw-bold fs-5">${(pageantDetails.entryFee?.amount || 0) + (selectedCategories.length * 5)}.00</span>
-                        </div>
-                        <p className="small text-muted mt-3 mb-0">Payment will be collected after your registration is approved.</p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {errorMessage && (
-                    <div className="alert alert-danger mb-4" role="alert">
-                      {errorMessage}
-                    </div>
-                  )}
-                  
-                  <div className="button-group d-flex justify-content-between">
-                    <button 
-                      className="btn btn-outline-secondary"
-                      onClick={prevStep}
-                    >
-                      <FontAwesomeIcon icon={faArrowLeft} className="me-2" />
-                      Back
-                    </button>
-                    <button 
-                      className="btn btn-success"
-                      onClick={submitRegistration}
-                      disabled={!hasAgreedToTerms || isSubmitting}
-                    >
-                      {isSubmitting ? (
-                        <>
-                          <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                          Submitting...
-                        </>
-                      ) : (
-                        <>
-                          <FontAwesomeIcon icon={faFileSignature} className="me-2" />
-                          Complete Registration
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <Step4SignWaivers
+              hasAgreedToTerms={hasAgreedToTerms}
+              setHasAgreedToTerms={setHasAgreedToTerms}
+              pageantDetails={pageantDetails}
+              selectedCategories={selectedCategories}
+              errorMessage={errorMessage}
+              isSubmitting={isSubmitting}
+              onPrevStep={prevStep}
+              onSubmitRegistration={nextStep} // Move to checkout instead of submitting
+            />
           )}
         </>
       )}
