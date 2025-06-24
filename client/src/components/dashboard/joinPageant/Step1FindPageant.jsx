@@ -11,6 +11,19 @@ const Step1FindPageant = ({
   pageantDetails,
   onNextStep
 }) => {
+
+  function formatAddress(location) {
+    if (!location || !location.address) return "";
+
+    const { street, city, state, zipCode, country } = location.address;
+
+    // Combine parts, filtering out undefined or empty values
+    const parts = [street, city, state, zipCode, country].filter(Boolean);
+    
+    return parts.join(', ');
+  }
+
+
   return (
     <div className="step-content">
       <div className="card shadow-sm">
@@ -68,18 +81,58 @@ const Step1FindPageant = ({
                   <h5 className="mb-0">{pageantDetails.name}</h5>
                 </div>
                 <div className="card-body">
-                  <div className="row">
-                    <div className="col-md-6">
-                      <p><strong>Organization:</strong> {pageantDetails.organization?.name || 'N/A'}</p>
-                      <p><strong>Date:</strong> {new Date(pageantDetails.startDate).toLocaleDateString()} - {new Date(pageantDetails.endDate).toLocaleDateString()}</p>
-                      <p><strong>Location:</strong> {pageantDetails.location || 'TBD'}</p>
-                      <p><strong>Entry Fee:</strong> ${pageantDetails.entryFee?.amount || 0}.00</p>
+                  {/* First Row - Basic Information */}
+                  <div className="row mb-4">
+                    <div className="col-md-3">
+                      <div className="info-item">
+                        <p className="info-label mb-1"><strong>Organization:</strong></p>
+                        <p className="info-value">{pageantDetails.organization?.name || 'N/A'}</p>
+                      </div>
                     </div>
-                    <div className="col-md-6">
-                      <p><strong>Description:</strong></p>
-                      <p className="text-muted">{pageantDetails.description}</p>
-                      <p><strong>Categories:</strong> {pageantDetails.categories?.map(cat => typeof cat === 'string' ? cat : cat.name).join(", ")}</p>
-                      <p><strong>Age Groups:</strong> {pageantDetails.ageGroups?.join(", ")}</p>
+                    
+                    <div className="col-md-3">
+                      <div className="info-item">
+                        <p className="info-label mb-1"><strong>Date:</strong></p>
+                        <p className="info-value">{new Date(pageantDetails.startDate).toLocaleDateString()} - {new Date(pageantDetails.endDate).toLocaleDateString()}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="col-md-3">
+                      <div className="info-item">
+                        <p className="info-label mb-1"><strong>Location:</strong></p>
+                        <p className="info-value">{formatAddress(pageantDetails.location) || 'TBD'}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="col-md-3">
+                      <div className="info-item">
+                        <p className="info-label mb-1"><strong>Entry Fee:</strong></p>
+                        <p className="info-value">${pageantDetails.entryFee?.amount || 0}.00</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Second Row - Additional Information */}
+                  <div className="row">
+                    <div className="col-md-4">
+                      <div className="info-item">
+                        <p className="info-label mb-1"><strong>Description:</strong></p>
+                        <p className="info-value text-muted">{pageantDetails.description}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="col-md-4">
+                      <div className="info-item">
+                        <p className="info-label mb-1"><strong>Categories:</strong></p>
+                        <p className="info-value">{pageantDetails.categories?.map(cat => typeof cat === 'string' ? cat : cat.name).join(", ")}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="col-md-4">
+                      <div className="info-item">
+                        <p className="info-label mb-1"><strong>Age Groups:</strong></p>
+                        <p className="info-value">{pageantDetails.ageGroups?.join(", ")}</p>
+                      </div>
                     </div>
                   </div>
                   

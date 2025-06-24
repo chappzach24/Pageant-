@@ -1,0 +1,314 @@
+/* client/src/css/joinPageantSuccess.css */
+
+/* Success Page Container */
+.success-page-container {
+  padding: 2rem 0;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Success Header */
+.success-header {
+  margin-bottom: 3rem;
+}
+
+.success-icon-container {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #28a745, #20c997);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 25px rgba(40, 167, 69, 0.3);
+  animation: successPulse 2s ease-in-out infinite;
+}
+
+.success-icon {
+  font-size: 3.5rem;
+  color: white;
+}
+
+.success-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--secondary-color);
+  margin-bottom: 1rem;
+}
+
+.success-subtitle {
+  font-size: 1.2rem;
+  color: #6c757d;
+  max-width: 600px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+/* Card Styling */
+.payment-confirmation-card,
+.pageant-summary-card,
+.next-steps-card {
+  border: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 2rem;
+}
+
+.card-header {
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+  border-bottom: 1px solid #dee2e6;
+  padding: 1.5rem;
+}
+
+.card-title {
+  font-weight: 600;
+  color: var(--secondary-color);
+  font-size: 1.25rem;
+}
+
+.card-body {
+  padding: 2rem;
+}
+
+/* Payment Details */
+.payment-detail {
+  margin-bottom: 1.5rem;
+}
+
+.payment-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #6c757d;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.payment-value {
+  font-size: 1.1rem;
+  color: var(--secondary-color);
+  font-weight: 500;
+  margin-bottom: 0;
+}
+
+/* Pageant Summary */
+.pageant-name {
+  color: var(--secondary-color);
+  font-weight: 700;
+  border-bottom: 3px solid var(--brand-color);
+  padding-bottom: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.info-item {
+  margin-bottom: 1.5rem;
+}
+
+.info-label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+}
+
+.info-value {
+  font-size: 1.1rem;
+  color: var(--secondary-color);
+  margin-bottom: 0;
+}
+
+/* Categories */
+.categories-list,
+.categories-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.category-badge {
+  background-color: #e3f2fd;
+  color: #1565c0;
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: 1px solid #bbdefb;
+}
+
+.category-badge.primary {
+  background-color: rgba(212, 175, 55, 0.1);
+  color: var(--secondary-color);
+  border: 1px solid var(--brand-color);
+}
+
+/* Next Steps */
+.next-steps-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.next-step-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border-left: 4px solid var(--brand-color);
+}
+
+.step-number {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--brand-color), #e6c966);
+  color: var(--secondary-color);
+  font-weight: 700;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.step-content h6 {
+  color: var(--secondary-color);
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.step-content p {
+  color: #6c757d;
+  margin-bottom: 0;
+  line-height: 1.5;
+}
+
+/* Action Buttons */
+.action-buttons {
+  padding: 2rem 0;
+}
+
+.btn-lg {
+  padding: 0.75rem 2rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--brand-color), #e6c966);
+  border-color: var(--brand-color);
+  color: var(--secondary-color);
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #b08f2e, var(--brand-color));
+  border-color: #b08f2e;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(212, 175, 55, 0.3);
+}
+
+.btn-outline-secondary {
+  border-color: #6c757d;
+  color: #6c757d;
+}
+
+.btn-outline-secondary:hover {
+  background-color: #6c757d;
+  border-color: #6c757d;
+  transform: translateY(-2px);
+}
+
+/* Additional Info */
+.additional-info {
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid #dee2e6;
+}
+
+/* Animations */
+@keyframes successPulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 8px 25px rgba(40, 167, 69, 0.3);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 12px 35px rgba(40, 167, 69, 0.4);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 8px 25px rgba(40, 167, 69, 0.3);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 767.98px) {
+  .success-page-container {
+    padding: 1rem;
+  }
+  
+  .success-icon-container {
+    width: 100px;
+    height: 100px;
+  }
+  
+  .success-icon {
+    font-size: 3rem;
+  }
+  
+  .success-title {
+    font-size: 2rem;
+  }
+  
+  .success-subtitle {
+    font-size: 1.1rem;
+  }
+  
+  .card-body {
+    padding: 1.5rem;
+  }
+  
+  .next-step-item {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .step-number {
+    margin: 0 auto 1rem;
+  }
+  
+  .action-buttons .btn-lg {
+    display: block;
+    width: 100%;
+    margin-bottom: 1rem;
+  }
+  
+  .categories-list,
+  .categories-grid {
+    justify-content: center;
+  }
+}
+
+/* Print Styles */
+@media print {
+  .action-buttons {
+    display: none;
+  }
+  
+  .success-page-container {
+    padding: 0;
+  }
+  
+  .card {
+    box-shadow: none;
+    border: 1px solid #dee2e6;
+  }
+}

@@ -5,6 +5,9 @@
   margin-bottom: 2rem;
 }
 
+.join-pageant-container .step-content p{
+  max-width: none;
+}
 /* Success Container */
 .success-container {
   display: flex;
@@ -222,7 +225,7 @@
 
 .terms-content .card .card-body > p {
   color: black;
-  margin-top: 0.5rem;
+  margin-top: 1rem;
 }
 
 /* Button Styles */

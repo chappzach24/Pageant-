@@ -1,5 +1,5 @@
 // client/src/components/dashboard/joinPageant/Step4SignWaivers.jsx
-import React from 'react';
+import { useEffect} from 'react';
 import CheckoutButton from '../CheckoutButton';
 
 const Step4SignWaivers = ({ 
@@ -10,12 +10,18 @@ const Step4SignWaivers = ({
   errorMessage, 
   isSubmitting, 
   onPrevStep, 
+  profileData,
   onSubmitRegistration 
 }) => {
   const baseEntryFee = pageantDetails?.entryFee?.amount || 0;
   const categoryFee = selectedCategories?.length * 5 || 0;
   const totalAmount = baseEntryFee + categoryFee;
-
+    useEffect(() => {
+        console.log("profileData", profileData);
+        console.log('pageantDetails', pageantDetails);
+        console.log("selectedCategories", selectedCategories);
+    })
+    
   return (
     <div className="step-content">
       <div className="card shadow-sm">
@@ -129,7 +135,7 @@ const Step4SignWaivers = ({
                   <span className="fw-bold fs-5">Total:</span>
                   <span className="fw-bold fs-5">${totalAmount.toFixed(2)}</span>
                 </div>
-                <p className="small text-muted mt-3 mb-0">Payment will be collected after your registration is approved.</p>
+                <p className="small text-muted mt-3 mb-0">Payment will be refunded if your registration is declined.</p>
               </div>
             </div>
           </div>
@@ -169,6 +175,14 @@ const Step4SignWaivers = ({
             </button>
             <CheckoutButton
                 amount={totalAmount.toFixed(2)}
+                categories={selectedCategories}
+                pageantName={pageantDetails.name}
+                organizationName={pageantDetails.organization.name}
+                pageantStartDate={pageantDetails.startDate}
+                pageantEndDate={pageantDetails.endDate}
+                locationCity={pageantDetails.location.address.city}
+                locationState={pageantDetails.location.address.state}
+                userId={profileData.contestant.profile._id}
             />
           </div>
         </div>

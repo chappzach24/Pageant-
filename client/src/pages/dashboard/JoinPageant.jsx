@@ -98,28 +98,41 @@ const JoinPageant = () => {
     setErrorMessage('');
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock pageant data
-      const mockPageant = {
-        id: pageantId,
-        name: 'Spring Beauty Pageant 2024',
-        organization: { name: 'Beauty Organization Inc.' },
-        description: 'A celebration of beauty, talent, and grace featuring contestants from across the region.',
-        startDate: '2024-04-15',
-        endDate: '2024-04-15',
-        location: 'Grand Theater, Columbus, OH',
-        entryFee: { amount: 75 },
-        categories: ['Evening Gown', 'Talent', 'Interview', 'Swimwear', 'Casual Wear'],
-        ageGroups: ['13 - 18 Years', '19 - 39 Years', '40+ Years'],
-        registrationDeadline: '2024-04-01'
-      };
+      // Make API request to search for pageant
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/pageants/search/${pageantId}`,
+        {
+          method: 'GET',
+          credentials: 'include',
+          headers: {
+            'Accept': 'application/json'
+          }
+        }
+      );
 
-      setPageantDetails(mockPageant);
-      setPageantFound(true);
+      const data = await response.json();
+
+       if (!response.ok) {
+        // Display the specific error message from the backend
+        setPageantFound(false);
+        setErrorMessage(data.error || 'Failed to find pageant with that ID');
+        return;
+      }
+      
+      if (data.success && data.pageant) {
+        console.log("Pageant", data.pageant);
+        setPageantFound(true);
+        setPageantDetails(data.pageant);
+        // Reset selected categories
+        setSelectedCategories([]);
+      } else {
+        setPageantFound(false);
+        setErrorMessage('Pageant not found. Please check the ID and try again.');
+      }
     } catch (error) {
-      setErrorMessage('Failed to find pageant. Please check the ID and try again.');
+      console.error('Error searching for pageant:', error);
+      setPageantFound(false);
+      setErrorMessage(error.message || 'Failed to search for pageant. Please try again.');
     } finally {
       setIsSearching(false);
     }
@@ -295,6 +308,7 @@ const JoinPageant = () => {
               errorMessage={errorMessage}
               isSubmitting={isSubmitting}
               onPrevStep={prevStep}
+              profileData={profileData}
               onSubmitRegistration={nextStep} // Move to checkout instead of submitting
             />
           )}

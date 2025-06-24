@@ -22,6 +22,7 @@ import JoinPageant from "./pages/dashboard/JoinPageant.jsx";
 import MyPageants from "./pages/dashboard/MyPageants.jsx";
 import PastPageants from "./pages/dashboard/PastPageants.jsx";
 import ContestantPayments from "./pages/dashboard/ContestantPayments.jsx";
+import JoinPageantSuccess from "./pages/dashboard/JoinPageantSuccess.jsx";
 
 // Organization Dashboard Components
 import OrganizationDashboardLayout from "./components/dashboard/OrganizationDashboardLayout.jsx";
@@ -137,6 +138,10 @@ const router = createBrowserRouter([
               {
                 path: "join-pageant",
                 element: <JoinPageant />,
+              },
+              {
+                path: 'join-pageant/success',
+                element: <JoinPageantSuccess />
               },
               {
                 path: "my-pageants",
