@@ -330,8 +330,9 @@ const PageantManagement = () => {
                 : "Loading..."}
             </p>
           </div>
+          {/* FIXED: Removed /organizations from the path */}
           <Link
-            to={`/organization-dashboard/organizations/${organizationId}/pageants/new`}
+            to={`/organization-dashboard/${organizationId}/pageants/new`}
             className="btn btn-primary"
           >
             <FontAwesomeIcon icon={faPlus} className="me-2" />
@@ -449,8 +450,9 @@ const PageantManagement = () => {
           <p className="text-muted">
             You haven't created any pageants for this organization yet.
           </p>
+          {/* FIXED: Removed /organizations from the path */}
           <Link
-            to={`/organization-dashboard/organizations/${organizationId}/pageants/new`}
+            to={`/organization-dashboard/${organizationId}/pageants/new`}
             className="btn btn-primary mt-3"
           >
             <FontAwesomeIcon icon={faPlus} className="me-2" />

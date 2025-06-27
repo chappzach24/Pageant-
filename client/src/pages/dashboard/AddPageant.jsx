@@ -89,7 +89,7 @@ const AddPageant = () => {
         {
           name: "",
           description: "",
-          price: 0,  // Still stores 0, but UI will show empty
+          price: 0, // Still stores 0, but UI will show empty
           scoringCriteria: [],
         },
       ],
@@ -828,7 +828,7 @@ const AddPageant = () => {
                                 }
                               ></textarea>
                             </div>
-                            
+
                             {/* FIXED: Category Price Field - shows empty instead of 0 */}
                             <div className="mb-3">
                               <label
@@ -841,12 +841,16 @@ const AddPageant = () => {
                                 type="number"
                                 className="form-control"
                                 id={`category-price-${index}`}
-                                value={category.price === 0 ? '' : category.price}
+                                value={
+                                  category.price === 0 ? "" : category.price
+                                }
                                 onChange={(e) =>
                                   handleCategoryChange(
                                     index,
                                     "price",
-                                    e.target.value === '' ? 0 : parseFloat(e.target.value) || 0
+                                    e.target.value === ""
+                                      ? 0
+                                      : parseFloat(e.target.value) || 0
                                   )
                                 }
                                 min="0"
@@ -855,7 +859,6 @@ const AddPageant = () => {
                               />
                             </div>
                             {/* END FIXED */}
-                            
                           </div>
                         </div>
                       </div>

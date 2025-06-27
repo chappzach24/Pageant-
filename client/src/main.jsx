@@ -29,6 +29,7 @@ import OrganizationDashboardHome from "./pages/dashboard/OrganizationDashboardHo
 import PageantManagement from "./pages/dashboard/PageantManagement.jsx";
 import AddPageant from "./pages/dashboard/AddPageant.jsx";
 import ScoringDashboard from "./pages/dashboard/ScoringDashboard.jsx";
+import PageantScoringPage from "./pages/dashboard/PageantScoringPage.jsx";
 
 import OrganizationParticipants from "./pages/dashboard/OrganizationParticipants.jsx";
 import OrganizationReports from "./pages/dashboard/OrganizationReports.jsx";
@@ -81,9 +82,18 @@ const router = createBrowserRouter([
                 path: "scoring",
                 element: <ScoringDashboard />,
               },
+              // NEW SCORING ROUTES
+              {
+                path: "scoring/pageant/:pageantId",
+                element: <PageantScoringPage />,
+              },
+              {
+                path: "scoring/pageant/:pageantId/results", 
+                element: <h1>Results Page (Coming Soon)</h1>,
+              },
               // Protected organization-specific routes - users can only access their own organizations
               {
-                path: ":organizationId",
+                path: "organizations/:organizationId",
                 element: <OrganizationOwnerCheck />,
                 children: [
                   {

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faTrophy,
@@ -11,22 +11,47 @@ import {
   faDownload,
   faCheckCircle,
   faClock,
-  faExclamationTriangle
+  faExclamationTriangle,
+  faPlus
 } from '@fortawesome/free-solid-svg-icons';
 import { DashboardPageHeader, LoadingSpinner, EmptyState, SearchFilterBar } from '../../components/dashboard/common';
+import { useAuth } from '../../context/AuthContext';
 
 const ScoringDashboard = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [pageants, setPageants] = useState([]);
+  const [organizations, setOrganizations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [sortBy, setSortBy] = useState('startDate');
 
-  // Fetch pageants for scoring
+  // Fetch organizations and pageants for scoring
   useEffect(() => {
-    const fetchPageants = async () => {
+    const fetchData = async () => {
       try {
+        // First fetch user's organizations
+        const orgResponse = await fetch(
+          `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/organizations/user`,
+          {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+              'Accept': 'application/json',
+            },
+          }
+        );
+
+        if (!orgResponse.ok) {
+          throw new Error('Failed to fetch organizations');
+        }
+
+        const orgData = await orgResponse.json();
+        setOrganizations(orgData.organizations || []);
+
+        // Then fetch pageants for scoring
         const response = await fetch(
           `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/scoring/pageants`,
           {
@@ -45,15 +70,27 @@ const ScoringDashboard = () => {
         const data = await response.json();
         setPageants(data.pageants || []);
       } catch (error) {
-        console.error('Error fetching pageants:', error);
-        setError(error.message || 'Failed to fetch pageants');
+        console.error('Error fetching data:', error);
+        setError(error.message || 'Failed to fetch data');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchPageants();
+    fetchData();
   }, []);
+
+  // Navigate to create pageant page
+  const handleCreatePageant = () => {
+    if (organizations.length > 0) {
+      // Navigate to create pageant page for the first organization
+      // You could also show a modal to let user select which organization
+      navigate(`/organization-dashboard/organizations/${organizations[0]._id}/pageants/new`);
+    } else {
+      // Navigate to create organization first
+      navigate('/organization-dashboard/organizations');
+    }
+  };
 
   // Filter and sort pageants
   const filteredPageants = pageants
@@ -141,7 +178,16 @@ const ScoringDashboard = () => {
       <DashboardPageHeader
         title="Scoring & Results"
         subtitle="Manage scoring for your pageants and view results"
-      />
+      >
+        {/* Add Create Pageant button to header */}
+        <button 
+          className="btn btn-primary"
+          onClick={handleCreatePageant}
+        >
+          <FontAwesomeIcon icon={faPlus} className="me-2" />
+          Create Pageant
+        </button>
+      </DashboardPageHeader>
 
       {/* Search and Filter */}
       <SearchFilterBar
@@ -177,10 +223,13 @@ const ScoringDashboard = () => {
           }
           actionButton={
             !searchTerm && filterStatus === 'all' && (
-              <Link to="/organization-dashboard/organizations" className="btn btn-primary">
-                <FontAwesomeIcon icon={faTrophy} className="me-2" />
+              <button 
+                className="btn btn-primary"
+                onClick={handleCreatePageant}
+              >
+                <FontAwesomeIcon icon={faPlus} className="me-2" />
                 Create First Pageant
-              </Link>
+              </button>
             )
           }
         />
