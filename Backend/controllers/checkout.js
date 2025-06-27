@@ -2,9 +2,8 @@ const stripe = require('stripe')(process.env.SK_TEST);
 
 exports.createCheckout = async(req, res) => {
     try {
-        console.log()
-        const { stripeAmount } = req.body;
-
+        const { stripeAmount, categories, pageantName, organizationName, pageantStartDate, pageantEndDate, locationCity, locationState, userId } = req.body;
+        console.log("categories", categories);
         if (!stripeAmount || isNaN(stripeAmount)) {
           return res.status(400).json({ error: 'Invalid amount' });
         }
@@ -24,7 +23,18 @@ exports.createCheckout = async(req, res) => {
             quantity: 1,
             },
         ],
-        success_url: 'http://localhost:3000/success',
+        metadata: {
+          amount: stripeAmount,
+          selectedCategories: JSON.stringify(categories),
+          pageantName,
+          organizationName,
+          pageantStartDate,
+          pageantEndDate,
+          locationCity,
+          locationState,
+          userId,
+        },
+        success_url: 'http://localhost:5173/contestant-dashboard/join-pageant/success?session_id={CHECKOUT_SESSION_ID}',
         cancel_url: 'http://localhost:3000/cancel',
         });
 
@@ -34,3 +44,16 @@ exports.createCheckout = async(req, res) => {
     res.status(500).json({ error: 'Something went wrong' });
   }
 } 
+
+exports.checkoutInformation = async(req, res) => {
+  try {
+    const session = await stripe.checkout.sessions.retrieve(req.params.id, {
+      expand: ['payment_intent.charges'], // 👈 get payment details too
+    });
+
+    res.json(session);
+  } catch (err) {
+    console.error('Error fetching session:', err);
+    res.status(500).json({ error: 'Failed to retrieve session' });
+  }
+}

@@ -47,7 +47,12 @@ const Step3UploadPhotos = ({
                           src={URL.createObjectURL(faceImage)} 
                           alt="Face" 
                           className="img-fluid rounded mb-3"
-                          style={{maxHeight: '200px'}}
+                          style={{
+                            width: '100%',
+                            maxWidth: '200px',
+                            aspectRatio: '3/4',
+                            objectFit: 'cover'
+                          }}
                         />
                         <p className="text-success mb-2">
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="me-1">
@@ -81,7 +86,7 @@ const Step3UploadPhotos = ({
                     )}
                   </div>
                   <small className="text-muted">
-                    Clear headshot photo (JPG, PNG, max 5MB)
+                    For best quality, upload in 3:4 portrait ratio (JPG, PNG, max 5MB)
                   </small>
                 </div>
               </div>
@@ -97,7 +102,12 @@ const Step3UploadPhotos = ({
                           src={URL.createObjectURL(fullBodyImage)} 
                           alt="Full Body" 
                           className="img-fluid rounded mb-3"
-                          style={{maxHeight: '200px'}}
+                          style={{
+                            width: '100%',
+                            maxWidth: '200px',
+                            aspectRatio: '3/4',
+                            objectFit: 'cover'
+                          }}
                         />
                         <p className="text-success mb-2">
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="me-1">
@@ -131,7 +141,7 @@ const Step3UploadPhotos = ({
                     )}
                   </div>
                   <small className="text-muted">
-                    Full body photo in appropriate attire (JPG, PNG, max 5MB)
+                    For best quality, upload in 3:4 portrait ratio (JPG, PNG, max 5MB)
                   </small>
                 </div>
               </div>
@@ -209,28 +219,23 @@ const Step3UploadPhotos = ({
             )}
           </div>
 
-          {/* Requirements Check */}
-          <div className="requirements-check mb-4">
-            <div className="alert alert-info">
-              <h6 className="mb-2">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="me-2">
-                  <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none"/>
-                  <line x1="12" y1="8" x2="12" y2="12" stroke="currentColor" strokeWidth="2"/>
-                  <line x1="12" y1="16" x2="12.01" y2="16" stroke="currentColor" strokeWidth="2"/>
-                </svg>
-                Requirements Checklist
-              </h6>
-              <ul className="mb-0 small">
-                <li className={faceImage ? 'text-success' : 'text-muted'}>
-                  {faceImage ? '✓' : '○'} Face image uploaded
-                </li>
-                <li className={fullBodyImage ? 'text-success' : 'text-muted'}>
-                  {fullBodyImage ? '✓' : '○'} Full body image uploaded
-                </li>
-                <li className={selectedCategories.length > 0 ? 'text-success' : 'text-muted'}>
-                  {selectedCategories.length > 0 ? '✓' : '○'} At least one category selected
-                </li>
-              </ul>
+          {/* Progress Checklist */}
+          <div className="progress-section mb-4">
+            <h5 className="mb-3">Progress Checklist</h5>
+            <div className="card bg-light">
+              <div className="card-body">
+                <ul className="list-unstyled mb-0">
+                  <li className={faceImage ? 'text-success' : 'text-muted'}>
+                    {faceImage ? '✓' : '○'} Face image uploaded
+                  </li>
+                  <li className={fullBodyImage ? 'text-success' : 'text-muted'}>
+                    {fullBodyImage ? '✓' : '○'} Full body image uploaded
+                  </li>
+                  <li className={selectedCategories.length > 0 ? 'text-success' : 'text-muted'}>
+                    {selectedCategories.length > 0 ? '✓' : '○'} At least one category selected
+                  </li>
+                </ul>
+              </div>
             </div>
           </div>
 
@@ -263,17 +268,26 @@ const Step3UploadPhotos = ({
       {/* Custom Styles */}
       <style jsx>{`
         .photo-upload-container {
-          min-height: 250px;
+          min-height: 350px;
           display: flex;
           align-items: center;
           justify-content: center;
           background-color: #f8f9fa;
           border: 2px dashed #dee2e6;
           transition: border-color 0.3s ease;
+          margin-bottom: 0.5rem;
         }
 
         .photo-upload-container:hover {
           border-color: #0d6efd;
+        }
+
+        .uploaded-photo img {
+          width: 100%;
+          max-width: 200px;
+          aspect-ratio: 3/4;
+          object-fit: cover;
+          border-radius: 8px;
         }
 
         .category-card {
@@ -294,6 +308,12 @@ const Step3UploadPhotos = ({
 
         .upload-placeholder input[type="file"] {
           margin-top: 1rem;
+        }
+
+        .categories-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          gap: 1rem;
         }
       `}</style>
     </div>
