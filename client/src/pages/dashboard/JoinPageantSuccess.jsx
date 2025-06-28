@@ -18,6 +18,9 @@ const JoinPageantSuccess = () => {
   const location = useLocation();
   const [transactionData, setTransactionData] = useState({ paymentDate: new Date().toISOString() });
   const [transactionId, setTransactionId] = useState();
+  const [registrationStatus, setRegistrationStatus] = useState('processing'); // 'processing', 'success', 'error'
+  const [registrationError, setRegistrationError] = useState('');
+  const [participantId, setParticipantId] = useState(null);
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -34,6 +37,53 @@ const JoinPageantSuccess = () => {
     }).format(amount);
   };
 
+  // Function to register participant in the database
+  const registerParticipant = async () => {
+    try {
+      // Prepare the registration data
+      const formData = new FormData();
+      formData.append('pageantId', transactionData.pageantId);
+      formData.append('categories', JSON.stringify(transactionData.selectedCategories));
+      formData.append('stripeSessionId', sessionId);
+      formData.append('transactionId', transactionId);
+      formData.append('stripePaymentIntentId', transactionId);
+      formData.append('paymentStatus', 'completed');
+      formData.append('paymentAmount', transactionData.amount/100);
+      // If photos were uploaded during the registration process and stored temporarily,
+      // you might need to handle them here. For now, assuming they're handled separately.
+
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/participants/register`,
+        {
+          method: 'POST',
+          credentials: 'include',
+          body: formData
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to complete registration');
+      }
+
+      const data = await response.json();
+      
+      // Successfully registered
+      setParticipantId(data.participant._id);
+      setRegistrationStatus('success');
+      
+      return data.participant;
+    } catch (error) {
+      console.error('Registration error:', error);
+      setRegistrationError(error.message);
+      setRegistrationStatus('error');
+      throw error;
+    }
+  };
+
+  useEffect(() => {
+    console.log(transactionData)
+  })
 
   useEffect(() => {
     const fetchData = async() => {
@@ -60,10 +110,11 @@ const JoinPageantSuccess = () => {
             }));
 
             setTransactionId(data.payment_intent.id)
-
-            console.log("transaction id", data)
+            
         }catch(error){
             console.error("Error getting checkout data", error);
+            setRegistrationError(error.message);
+            setRegistrationStatus('error');
         }
         
     }
@@ -71,6 +122,70 @@ const JoinPageantSuccess = () => {
         fetchData();
     }
   }, [sessionId]);
+
+  useEffect(() => {
+    if(transactionData.pageantId && transactionData.userId){
+        registerParticipant();
+    }
+  }, [transactionData])
+
+  // Show loading state while processing
+  if (registrationStatus === 'processing') {
+    return (
+      <div className="success-page-container">
+        <div className="success-header text-center mb-5">
+          <div className="success-icon-container mx-auto mb-4">
+            <div className="spinner-border text-primary" role="status">
+              <span className="visually-hidden">Processing registration...</span>
+            </div>
+          </div>
+          <h1 className="success-title mb-3">Processing Your Registration</h1>
+          <p className="success-subtitle">
+            Your payment was successful! We're now completing your pageant registration.
+            This should only take a moment...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state if registration failed
+  if (registrationStatus === 'error') {
+    return (
+      <div className="success-page-container">
+        <div className="success-header text-center mb-5">
+          <div className="success-icon-container mx-auto mb-4 bg-warning">
+            <FontAwesomeIcon icon={faExclamationTriangle} className="success-icon text-white" />
+          </div>
+          <h1 className="success-title mb-3 text-warning">Registration Issue</h1>
+          <p className="success-subtitle">
+            Your payment was processed successfully, but there was an issue completing your registration.
+          </p>
+          
+          {registrationError && (
+            <div className="alert alert-warning mt-4">
+              <strong>Error:</strong> {registrationError}
+            </div>
+          )}
+          
+          <div className="mt-4">
+            <button 
+              className="btn btn-primary me-3" 
+              onClick={retryRegistration}
+            >
+              Retry Registration
+            </button>
+            <Link 
+              to="/support" 
+              className="btn btn-outline-secondary"
+            >
+              Contact Support
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="success-page-container">

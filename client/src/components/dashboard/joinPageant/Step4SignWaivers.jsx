@@ -182,7 +182,9 @@ const Step4SignWaivers = ({
                 pageantEndDate={pageantDetails.endDate}
                 locationCity={pageantDetails.location.address.city}
                 locationState={pageantDetails.location.address.state}
-                userId={profileData.contestant.profile._id}
+                contestantId={profileData.contestant.profile._id}
+                pageantId={pageantDetails._id}
+                userId={profileData.contestant.user._id}
             />
           </div>
         </div>

@@ -1,6 +1,7 @@
 // Backend/controllers/participant.js
 const Participant = require('../models/Participant');
 const ContestantProfile = require('../models/ContestantProfile');
+const Payment = require('../models/Payment');
 const Pageant = require('../models/Pageant');
 const User = require('../models/User');
 const fs = require('fs');
@@ -33,6 +34,16 @@ exports.registerForPageant = async (req, res) => {
         error: 'Invalid categories format'
       });
     }
+
+    // Extract payment information from request
+    const {
+      stripeSessionId,
+      stripePaymentIntentId,
+      stripeCustomerId,
+      transactionId,
+      paymentAmount,
+      paymentStatus
+    } = req.body;
 
     // Check if pageant exists
     const pageant = await Pageant.findById(pageantId);
@@ -76,6 +87,14 @@ exports.registerForPageant = async (req, res) => {
       });
     }
 
+    let contestantProfile = await ContestantProfile.findOne({ user: req.user.id });
+    if (!contestantProfile) {
+      contestantProfile = new ContestantProfile({
+        user: req.user.id
+      });
+      await contestantProfile.save();
+    }
+
     // Get user data to determine age group
     const user = await User.findById(req.user.id);
     
@@ -112,51 +131,7 @@ exports.registerForPageant = async (req, res) => {
       });
     }
 
-    // Validate categories
-    const formattedCategories = [];
-    
-    if (!Array.isArray(categories) || categories.length === 0) {
-      return res.status(400).json({
-        success: false,
-        error: 'You must select at least one category'
-      });
-    }
-
-    // Format categories for storage
-    for (const category of categories) {
-      // Check if the category exists in the pageant
-      const categoryExists = pageant.categories.some(c => c.name === category);
-      if (!categoryExists) {
-        return res.status(400).json({
-          success: false,
-          error: `Category "${category}" does not exist in this pageant`
-        });
-      }
-      
-      formattedCategories.push({
-        category: category
-      });
-    }
-
-    // Check if waiver was agreed to
-    const waiverAgreed = req.body.waiverAgreed === 'true';
-    if (!waiverAgreed) {
-      return res.status(400).json({
-        success: false,
-        error: 'You must agree to the waiver to register'
-      });
-    }
-
-    // Get contestant profile
-    const contestantProfile = await ContestantProfile.findOne({ user: req.user.id });
-    if (!contestantProfile) {
-      return res.status(400).json({
-        success: false,
-        error: 'Contestant profile not found. Please complete your profile first.'
-      });
-    }
-
-    // Process and save uploaded photos
+    // Process uploaded photos
     const photos = {
       faceImage: {},
       fullBodyImage: {}
@@ -204,11 +179,11 @@ exports.registerForPageant = async (req, res) => {
       };
     }
 
-    // Calculate payment amount
-    const baseEntryFee = pageant.entryFee?.amount || 0;
-    const categoryFee = categories.length * 5; // $5 per category
-    const totalPaymentAmount = baseEntryFee + categoryFee;
-
+    // Format categories for participant
+    const formattedCategories = categories.map(cat => ({ category: cat }));
+    console.log("pay amount", paymentAmount);
+    console.log("pay status", paymentStatus);
+    console.log("user id", req.user.id);
     // Create new participant entry
     const participant = new Participant({
       user: req.user.id,
@@ -216,13 +191,44 @@ exports.registerForPageant = async (req, res) => {
       contestantProfile: contestantProfile._id,
       categories: formattedCategories,
       photos,
-      waiverAgreed,
+      waiverAgreed: true,
       ageGroup,
-      paymentAmount: totalPaymentAmount
+      paymentStatus: paymentStatus || 'pending',
+      paymentAmount,
+      totalPaid: paymentAmount,
+      balanceDue: 0,
     });
 
     // Save the participant record first to generate its _id
     await participant.save();
+    // Create payment record if payment information is provided
+    if (transactionId && paymentAmount) {
+      const payment = new Payment({
+        participant: participant._id,
+        user: req.user.id,
+        pageant: pageantId,
+        amount: parseFloat(paymentAmount),
+        status: paymentStatus,
+        method: 'stripe',
+        transactionId,
+        stripeSessionId,
+        stripePaymentIntentId,
+        stripeCustomerId,
+        description: `Registration payment for ${pageant.name}`,
+        metadata: {
+          pageantName: pageant.name,
+          categories: categories.join(', ')
+        }
+      });
+
+      await payment.save();
+      console.log("Participant id", participant._id);
+      console.log("payment id", payment._id);
+      await Participant.findByIdAndUpdate(
+        participant._id,
+        { $addToSet : { paymentHistory: payment._id }}
+      );
+    }
 
     // Update the pageant to include this participant, not the contestant profile
     await Pageant.findByIdAndUpdate(

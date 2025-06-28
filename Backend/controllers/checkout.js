@@ -2,7 +2,7 @@ const stripe = require('stripe')(process.env.SK_TEST);
 
 exports.createCheckout = async(req, res) => {
     try {
-        const { stripeAmount, categories, pageantName, organizationName, pageantStartDate, pageantEndDate, locationCity, locationState, userId } = req.body;
+        const { stripeAmount, categories, pageantName, organizationName, pageantStartDate, pageantEndDate, locationCity, locationState, contestantId, pageantId, userId } = req.body;
         console.log("categories", categories);
         if (!stripeAmount || isNaN(stripeAmount)) {
           return res.status(400).json({ error: 'Invalid amount' });
@@ -32,6 +32,8 @@ exports.createCheckout = async(req, res) => {
           pageantEndDate,
           locationCity,
           locationState,
+          contestantId,
+          pageantId,
           userId,
         },
         success_url: 'http://localhost:5173/contestant-dashboard/join-pageant/success?session_id={CHECKOUT_SESSION_ID}',
