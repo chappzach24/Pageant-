@@ -5,7 +5,6 @@ const PaymentSchema = new mongoose.Schema({
   participant: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Participant',
-    required: true
   },
   user: {
     type: mongoose.Schema.Types.ObjectId,

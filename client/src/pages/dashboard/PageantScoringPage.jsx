@@ -32,7 +32,7 @@ import {
 } from '../../components/dashboard/common';
 
 // Import CSS
-import '../../css/pageantScoring.css';
+// import '../../css/pageantScoring.css';
 
 const PageantScoringPage = () => {
   const { pageantId } = useParams();
