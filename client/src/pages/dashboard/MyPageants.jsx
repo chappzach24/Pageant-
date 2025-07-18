@@ -108,6 +108,7 @@ const MyPageants = () => {
           icon={faExclamationTriangle}
           message="No upcoming pageants found. You haven't registered for any future pageants yet."
           variant="info"
+          colorClass='u-text-dark'
         />
       ) : (
         <PageantGrid 
