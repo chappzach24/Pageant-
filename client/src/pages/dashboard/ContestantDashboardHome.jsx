@@ -137,6 +137,7 @@ const ContestantDashboardHome = () => {
             icon={faExclamationTriangle}
             message="You have no active pageants. Join a pageant to get started!"
             variant="info"
+            colorClass="u-text-dark"
           />
         ) : (
           <PageantGrid 
@@ -162,6 +163,7 @@ const ContestantDashboardHome = () => {
             icon={faExclamationTriangle}
             message="You have no upcoming pageants. Browse available pageants to join one!"
             variant="info"
+            colorClass='u-text-dark'
           />
         ) : (
           <PageantGrid 

@@ -7,6 +7,7 @@ const EmptyState = ({
   message, 
   actionButton,
   className = "",
+  colorClass = "",
   variant = "info" // info, warning, success
 }) => {
   const alertClass = `alert-${variant}`;
@@ -21,7 +22,7 @@ const EmptyState = ({
         />
       )}
       {title && <h4>{title}</h4>}
-      {message && <p className="mb-0">{message}</p>}
+      {message && <p className={`mb-0 ${colorClass}`}>{message}</p>}
       {actionButton && <div className="mt-3">{actionButton}</div>}
     </div>
   );

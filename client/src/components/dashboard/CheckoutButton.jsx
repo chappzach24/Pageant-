@@ -4,7 +4,7 @@ import {
   faCreditCard
 } from '@fortawesome/free-solid-svg-icons';
 
-const CheckoutButton = ({ amount, categories, pageantName, organizationName, pageantStartDate, pageantEndDate, locationCity, locationState, userId }) => {
+const CheckoutButton = ({ amount, categories, pageantName, organizationName, pageantStartDate, pageantEndDate, locationCity, locationState, contestantId, pageantId, userId }) => {
   console.log("Button categories", categories);
   const handleClick = async () => {
     try {
@@ -14,7 +14,7 @@ const CheckoutButton = ({ amount, categories, pageantName, organizationName, pag
             headers: {
             'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ stripeAmount, categories, pageantName, organizationName, pageantStartDate, pageantEndDate, locationCity, locationState, userId }), //  Send amount in cents
+            body: JSON.stringify({ stripeAmount, categories, pageantName, organizationName, pageantStartDate, pageantEndDate, locationCity, locationState, contestantId, pageantId, userId }), //  Send amount in cents
         });
 
         const text = await res.text(); // instead of res.json()

@@ -150,6 +150,7 @@ const PastPageants = () => {
           icon={faExclamationTriangle}
           message="No past pageants found matching your criteria. Try adjusting your search or filter."
           variant="info"
+          colorClass='u-text-dark'
         />
       ) : (
         <PageantGrid 
