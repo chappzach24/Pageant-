@@ -599,3 +599,170 @@ exports.deleteParticipant = async (req, res) => {
     });
   }
 };
+
+// @route   PUT /api/participants/:id/scores
+// @desc    Update participant scores (alternative endpoint for scoring page)
+// @access  Private (Only for pageant organizer)
+exports.updateScores = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ 
+      success: false,
+      errors: errors.array() 
+    });
+  }
+
+  try {
+    // Find the participant
+    const participant = await Participant.findById(req.params.id)
+      .populate({
+        path: 'pageant',
+        select: 'organization categories status',
+        populate: {
+          path: 'organization',
+          select: 'owner'
+        }
+      })
+      .populate('user', 'username firstName lastName');
+    
+    if (!participant) {
+      return res.status(404).json({
+        success: false,
+        error: 'Participant not found'
+      });
+    }
+
+    // Check if user is the pageant organizer
+    if (participant.pageant.organization.owner.toString() !== req.user.id) {
+      return res.status(401).json({
+        success: false,
+        error: 'Not authorized to update scores for this pageant'
+      });
+    }
+
+    // Check if pageant allows scoring
+    if (participant.pageant.status !== 'in-progress' && participant.pageant.status !== 'completed' && participant.pageant.status !== 'published') {
+      return res.status(400).json({
+        success: false,
+        error: 'Scores can only be updated for published, in-progress, or completed pageants'
+      });
+    }
+
+    // Get category scores from request
+    const { categoryScores } = req.body;
+
+    if (!Array.isArray(categoryScores) || categoryScores.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Category scores must be provided as an array'
+      });
+    }
+
+    // Update scores for each category
+    for (const scoreUpdate of categoryScores) {
+      const { category, score, notes } = scoreUpdate;
+      
+      // Validate score
+      if (typeof score !== 'number' || score < 0 || score > 10) {
+        return res.status(400).json({
+          success: false,
+          error: `Score for ${category} must be a number between 0 and 10`
+        });
+      }
+
+      // Find the category in the participant's categories
+      const categoryIndex = participant.categories.findIndex(
+        c => c.category === category
+      );
+
+      if (categoryIndex === -1) {
+        return res.status(400).json({
+          success: false,
+          error: `Participant is not registered for category: ${category}`
+        });
+      }
+
+      // Update the score and notes
+      participant.categories[categoryIndex].score = score;
+      if (notes !== undefined) {
+        participant.categories[categoryIndex].notes = notes;
+      }
+    }
+
+    // Save the updated participant
+    await participant.save();
+
+    res.json({
+      success: true,
+      participant: {
+        _id: participant._id,
+        user: participant.user,
+        categories: participant.categories,
+        ageGroup: participant.ageGroup
+      }
+    });
+  } catch (error) {
+    console.error('Update participant scores error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Server error'
+    });
+  }
+};
+
+// @route   GET /api/participants/:id/scores
+// @desc    Get participant scores
+// @access  Private (Participant or pageant organizer)
+exports.getParticipantScores = async (req, res) => {
+  try {
+    const participant = await Participant.findById(req.params.id)
+      .populate({
+        path: 'pageant',
+        select: 'organization categories name',
+        populate: {
+          path: 'organization',
+          select: 'owner name'
+        }
+      })
+      .populate('user', 'username firstName lastName');
+    
+    if (!participant) {
+      return res.status(404).json({
+        success: false,
+        error: 'Participant not found'
+      });
+    }
+
+    // Check authorization - either the participant themselves or the pageant organizer
+    const isOwner = participant.user._id.toString() === req.user.id;
+    const isOrganizer = participant.pageant.organization.owner.toString() === req.user.id;
+
+    if (!isOwner && !isOrganizer) {
+      return res.status(401).json({
+        success: false,
+        error: 'Not authorized to view these scores'
+      });
+    }
+
+    res.json({
+      success: true,
+      participant: {
+        _id: participant._id,
+        user: participant.user,
+        pageant: {
+          _id: participant.pageant._id,
+          name: participant.pageant.name,
+          categories: participant.pageant.categories
+        },
+        categories: participant.categories,
+        ageGroup: participant.ageGroup
+      }
+    });
+  } catch (error) {
+    console.error('Get participant scores error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Server error'
+    });
+  }
+};

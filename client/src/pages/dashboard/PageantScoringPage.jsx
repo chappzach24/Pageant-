@@ -1,4 +1,3 @@
-// client/src/pages/dashboard/PageantScoringPage.jsx
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -55,119 +54,38 @@ const PageantScoringPage = () => {
         setLoading(true);
         setError(null);
 
-        // Mock API call - replace with actual API endpoint
-        // const response = await fetch(`/api/scoring/pageant/${pageantId}/details`, ...)
-        
-        // Mock data for demonstration
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        const mockPageantData = {
-          id: pageantId,
-          name: 'Spring Beauty Pageant 2025',
-          organization: 'Beauty Organization Inc.',
-          categories: [
-            { name: 'Evening Gown', maxScore: 10 },
-            { name: 'Talent', maxScore: 10 },
-            { name: 'Interview', maxScore: 10 },
-            { name: 'Swimwear', maxScore: 10 }
-          ],
-          ageGroups: ['13 - 18 Years', '19 - 39 Years'],
-          status: 'in-progress'
-        };
+        const response = await fetch(
+          `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/scoring/pageant/${pageantId}/details`,
+          {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+              'Accept': 'application/json',
+            },
+          }
+        );
 
-        const mockParticipants = {
-          '13 - 18 Years': [
-            {
-              participantId: 'p1',
-              user: {
-                firstName: 'Emma',
-                lastName: 'Johnson',
-                username: 'emmaj2010'
-              },
-              categories: [
-                { category: 'Evening Gown', score: 8.5, notes: 'Great poise and elegance' },
-                { category: 'Talent', score: 9.0, notes: 'Outstanding performance' },
-                { category: 'Interview', score: 7.5, notes: 'Good responses, room for improvement' },
-                { category: 'Swimwear', score: 0, notes: '' }
-              ],
-              ageGroup: '13 - 18 Years'
-            },
-            {
-              participantId: 'p2',
-              user: {
-                firstName: 'Sophia',
-                lastName: 'Davis',
-                username: 'sophiad15'
-              },
-              categories: [
-                { category: 'Evening Gown', score: 9.0, notes: 'Stunning presentation' },
-                { category: 'Talent', score: 8.0, notes: 'Well prepared' },
-                { category: 'Interview', score: 8.5, notes: 'Confident and articulate' },
-                { category: 'Swimwear', score: 0, notes: '' }
-              ],
-              ageGroup: '13 - 18 Years'
-            },
-            {
-              participantId: 'p3',
-              user: {
-                firstName: 'Ava',
-                lastName: 'Taylor',
-                username: 'ava_t2009'
-              },
-              categories: [
-                { category: 'Evening Gown', score: 0, notes: '' },
-                { category: 'Talent', score: 0, notes: '' },
-                { category: 'Interview', score: 0, notes: '' },
-                { category: 'Swimwear', score: 0, notes: '' }
-              ],
-              ageGroup: '13 - 18 Years'
-            }
-          ],
-          '19 - 39 Years': [
-            {
-              participantId: 'p4',
-              user: {
-                firstName: 'Isabella',
-                lastName: 'Martinez',
-                username: 'bella_m'
-              },
-              categories: [
-                { category: 'Evening Gown', score: 9.5, notes: 'Exceptional grace' },
-                { category: 'Talent', score: 9.5, notes: 'Professional level' },
-                { category: 'Interview', score: 9.0, notes: 'Very impressive' },
-                { category: 'Swimwear', score: 8.5, notes: 'Strong confidence' }
-              ],
-              ageGroup: '19 - 39 Years'
-            },
-            {
-              participantId: 'p5',
-              user: {
-                firstName: 'Mia',
-                lastName: 'Anderson',
-                username: 'mia_pageant'
-              },
-              categories: [
-                { category: 'Evening Gown', score: 8.0, notes: 'Beautiful gown choice' },
-                { category: 'Talent', score: 8.5, notes: 'Great stage presence' },
-                { category: 'Interview', score: 0, notes: '' },
-                { category: 'Swimwear', score: 0, notes: '' }
-              ],
-              ageGroup: '19 - 39 Years'
-            }
-          ]
-        };
+        if (!response.ok) {
+          throw new Error('Failed to fetch pageant scoring data');
+        }
 
-        setPageantData(mockPageantData);
-        setParticipantsByAgeGroup(mockParticipants);
+        const data = await response.json();
         
-        // Set first age group as selected by default
-        if (mockPageantData.ageGroups.length > 0) {
-          setSelectedAgeGroup(mockPageantData.ageGroups[0]);
+        if (data.success) {
+          setPageantData(data.pageant);
+          setParticipantsByAgeGroup(data.participantsByAgeGroup);
+          
+          // Set first age group as selected by default
+          if (data.pageant.ageGroups && data.pageant.ageGroups.length > 0) {
+            setSelectedAgeGroup(data.pageant.ageGroups[0]);
+          }
+        } else {
+          throw new Error(data.error || 'Failed to load pageant data');
         }
         
       } catch (error) {
         console.error('Error fetching pageant scoring data:', error);
-        setError('Failed to load pageant scoring data. Please try again.');
+        setError(error.message || 'Failed to load pageant scoring data. Please try again.');
       } finally {
         setLoading(false);
       }
@@ -233,8 +151,47 @@ const PageantScoringPage = () => {
     setError(null);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Group temp scores by participant
+      const scoresUpdate = {};
+      Object.entries(tempScores).forEach(([key, value]) => {
+        const [participantId, category, field] = key.split('-');
+        if (!scoresUpdate[participantId]) {
+          scoresUpdate[participantId] = {};
+        }
+        if (!scoresUpdate[participantId][category]) {
+          scoresUpdate[participantId][category] = {};
+        }
+        scoresUpdate[participantId][category][field] = field === 'score' ? parseFloat(value) || 0 : value;
+      });
+
+      // Save each participant's scores
+      for (const [participantId, categoryScores] of Object.entries(scoresUpdate)) {
+        const categoryScoresArray = Object.entries(categoryScores).map(([category, data]) => ({
+          category,
+          score: data.score || 0,
+          notes: data.notes || ''
+        }));
+
+        const response = await fetch(
+          `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/participants/${participantId}/scores`,
+          {
+            method: 'PUT',
+            credentials: 'include',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+            body: JSON.stringify({
+              categoryScores: categoryScoresArray
+            })
+          }
+        );
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to save scores');
+        }
+      }
       
       // Apply temp scores to actual data
       setParticipantsByAgeGroup(prev => {
@@ -264,7 +221,7 @@ const PageantScoringPage = () => {
       
     } catch (error) {
       console.error('Error saving scores:', error);
-      setError('Failed to save scores. Please try again.');
+      setError(error.message || 'Failed to save scores. Please try again.');
     } finally {
       setSaving(false);
     }
@@ -338,28 +295,34 @@ const PageantScoringPage = () => {
       {/* Categories Overview */}
       <div className="card mb-4 categories-overview">
         <div className="card-header">
-          <h5 className="card-title mb-0">Categories ({pageantData.categories.length})</h5>
+          <h5 className="card-title mb-0">Categories ({pageantData.categories?.length || 0})</h5>
         </div>
         <div className="card-body">
           <div className="row g-3">
-            {pageantData.categories.map((category, index) => (
+            {pageantData.categories?.map((category, index) => (
               <div key={index} className="col-md-3">
                 <div className="category-card">
                   <div className="category-name">{category.name}</div>
-                  <div className="category-max-score">Max Score: {category.maxScore}</div>
+                  <div className="category-max-score">Max Score: {category.maxScore || 10}</div>
                 </div>
               </div>
-            ))}
+            )) || (
+              <div className="col-12">
+                <EmptyState message="No categories defined for this pageant" variant="info" />
+              </div>
+            )}
           </div>
         </div>
       </div>
 
       {/* Age Group Tabs */}
-      <TabNavigation 
-        tabs={tabs}
-        activeTab={selectedAgeGroup}
-        onTabChange={setSelectedAgeGroup}
-      />
+      {tabs.length > 0 && (
+        <TabNavigation 
+          tabs={tabs}
+          activeTab={selectedAgeGroup}
+          onTabChange={setSelectedAgeGroup}
+        />
+      )}
 
       {/* Scoring Actions */}
       <div className="card mb-4 scoring-actions">
@@ -409,7 +372,7 @@ const PageantScoringPage = () => {
       {currentParticipants.length === 0 ? (
         <EmptyState 
           icon={faUsers}
-          message={`No participants found in the ${selectedAgeGroup} age group.`}
+          message={selectedAgeGroup ? `No participants found in the ${selectedAgeGroup} age group.` : 'No participants found.'}
           variant="info"
         />
       ) : (
@@ -437,11 +400,11 @@ const PageantScoringPage = () => {
                 <thead className="table-light">
                   <tr>
                     <th style={{ minWidth: '200px' }}>Participant</th>
-                    {pageantData.categories.map((category, index) => (
+                    {pageantData.categories?.map((category, index) => (
                       <th key={index} className="text-center" style={{ minWidth: '150px' }}>
                         {category.name}
                         <br />
-                        <small className="text-muted">Max: {category.maxScore}</small>
+                        <small className="text-muted">Max: {category.maxScore || 10}</small>
                       </th>
                     ))}
                     <th className="text-center" style={{ minWidth: '120px' }}>
@@ -479,7 +442,7 @@ const PageantScoringPage = () => {
                         </div>
                       </td>
                       
-                      {pageantData.categories.map((category, catIndex) => (
+                      {pageantData.categories?.map((category, catIndex) => (
                         <td key={catIndex} className="text-center category-score-cell">
                           <div className="score-input-group">
                             {editMode ? (
@@ -488,7 +451,7 @@ const PageantScoringPage = () => {
                                   type="number"
                                   className="form-control form-control-sm text-center score-input"
                                   min="0"
-                                  max={category.maxScore}
+                                  max={category.maxScore || 10}
                                   step="0.1"
                                   value={getCurrentScore(participant.participantId, category.name, 'score')}
                                   onChange={(e) => handleScoreChange(
@@ -517,7 +480,7 @@ const PageantScoringPage = () => {
                                 <div className={`score-display ${getCurrentScore(participant.participantId, category.name, 'score') > 0 ? 'scored' : 'unscored'}`}>
                                   {getCurrentScore(participant.participantId, category.name, 'score') || '-'}
                                   {getCurrentScore(participant.participantId, category.name, 'score') > 0 && (
-                                    <span className="score-max">/{category.maxScore}</span>
+                                    <span className="score-max">/{category.maxScore || 10}</span>
                                   )}
                                 </div>
                                 {getCurrentScore(participant.participantId, category.name, 'notes') && (
