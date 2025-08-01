@@ -62,10 +62,31 @@ router.put(
 );
 
 // @route   PUT /api/participants/:id/scores
-// @desc    Update participant scores
+// @desc    Update participant scores (for scoring page)
 // @access  Private (Only for pageant organizer)
 router.put(
   '/:id/scores',
+  [
+    protect,
+    [
+      check('categoryScores', 'Category scores array is required').isArray(),
+      check('categoryScores.*.category', 'Category name is required').not().isEmpty(),
+      check('categoryScores.*.score', 'Score must be a number between 0 and 10').isFloat({ min: 0, max: 10 })
+    ]
+  ],
+  participantController.updateScores
+);
+
+// @route   GET /api/participants/:id/scores
+// @desc    Get participant scores
+// @access  Private (Participant or pageant organizer)
+router.get('/:id/scores', protect, participantController.getParticipantScores);
+
+// @route   PUT /api/participants/:id/scores-legacy
+// @desc    Update participant scores (legacy endpoint)
+// @access  Private (Only for pageant organizer)
+router.put(
+  '/:id/scores-legacy',
   [
     protect,
     [

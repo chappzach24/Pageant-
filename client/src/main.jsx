@@ -32,10 +32,12 @@ import PageantManagement from "./pages/dashboard/PageantManagement.jsx";
 import AddPageant from "./pages/dashboard/AddPageant.jsx";
 import ScoringDashboard from "./pages/dashboard/ScoringDashboard.jsx";
 import PageantScoringPage from "./pages/dashboard/PageantScoringPage.jsx";
-
 import OrganizationParticipants from "./pages/dashboard/OrganizationParticipants.jsx";
 import OrganizationReports from "./pages/dashboard/OrganizationReports.jsx";
 
+// NEW IMPORTS FOR APPLICATION MANAGEMENT
+import ApplicationManagement from "./pages/dashboard/ApplicationManagement.jsx";
+import PageantApplications from "./pages/dashboard/PageantApplications.jsx";
 
 const router = createBrowserRouter([
   {
@@ -79,6 +81,14 @@ const router = createBrowserRouter([
               {
                 index: true,
                 element: <OrganizationDashboardHome />,
+              },
+              {
+                path: "applications", // NEW ROUTE
+                element: <ApplicationManagement />,
+              },
+              {
+                path: "applications/:pageantId", // NEW ROUTE
+                element: <PageantApplications />,
               },
               {
                 path: "scoring",

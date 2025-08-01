@@ -15,6 +15,7 @@ import {
   faFileAlt,
   faBell,
   faPlus,
+  faUserCheck, // NEW IMPORT FOR APPLICATIONS
 } from "@fortawesome/free-solid-svg-icons";
 import { useAuth } from "../../context/AuthContext";
 
@@ -24,6 +25,7 @@ const OrganizationSidebar = ({ onToggle }) => {
   const [organizations, setOrganizations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [notifications, setNotifications] = useState(3); // Example notification count
+  const [pendingApplications, setPendingApplications] = useState(5); // NEW STATE FOR APPLICATIONS
   const location = useLocation();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -55,9 +57,23 @@ const OrganizationSidebar = ({ onToggle }) => {
     }
   }, []);
 
+  // NEW FUNCTION: Fetch pending applications count
+  const fetchPendingApplications = useCallback(async () => {
+    try {
+      // Mock API call - replace with actual endpoint
+      // const response = await fetch(`${import.meta.env.VITE_API_URL}/api/applications/pending-count`, ...);
+      
+      // Simulate API response
+      setPendingApplications(5); // Replace with actual data from API
+    } catch (err) {
+      console.error("Error fetching pending applications:", err);
+    }
+  }, []);
+
   useEffect(() => {
     fetchOrganizations();
-  }, [fetchOrganizations]);
+    fetchPendingApplications(); // NEW CALL
+  }, [fetchOrganizations, fetchPendingApplications]);
 
   useEffect(() => {
     // Report collapsed state to parent component
@@ -79,7 +95,7 @@ const OrganizationSidebar = ({ onToggle }) => {
     }
   };
 
-  // Main navigation items
+  // Main navigation items - UPDATED WITH APPLICATIONS
   const navItems = [
     {
       path: "/organization-dashboard",
@@ -92,6 +108,12 @@ const OrganizationSidebar = ({ onToggle }) => {
       icon: faBuilding,
       text: "My Organizations",
       badge: organizations.length > 0 ? organizations.length : null,
+    },
+    {
+      path: "/organization-dashboard/applications", // NEW ITEM
+      icon: faUserCheck,
+      text: "Applications",
+      badge: pendingApplications > 0 ? pendingApplications : null,
     },
     {
       path: `/organization-dashboard/${organizations[0]?._id}/pageants`,
@@ -300,7 +322,11 @@ const OrganizationSidebar = ({ onToggle }) => {
                         )}
                       </div>
                       {!collapsed && item.badge && (
-                        <span className="badge bg-primary ms-2">
+                        <span className={`badge ms-2 ${
+                          item.text === 'Applications' && item.badge > 0 
+                            ? 'bg-warning text-dark' 
+                            : 'bg-primary'
+                        }`}>
                           {item.badge}
                         </span>
                       )}

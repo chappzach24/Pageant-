@@ -1,0 +1,241 @@
+.small-stat {
+  padding: 8px;
+  border-radius: 6px;
+  background-color: #f8f9fa;
+  margin-bottom: 4px;
+}
+
+.small-stat .stat-number {
+  font-size: 1.2rem;
+  font-weight: bold;
+  line-height: 1;
+  margin-bottom: 2px;
+}
+
+.small-stat .stat-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 0.25rem;
+  color: #6c757d;
+}
+
+/* Quick action cards styling */
+.quick-action-card {
+  transition: transform 0.2s ease;
+  background-color: #fff8e1;
+  border: 1px solid #ffc107;
+}
+
+.quick-action-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Avatar styling for consistency */
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: var(--brand-color, #d4af37);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+/* Categories list styling */
+.categories-list .badge {
+  font-size: 0.7rem;
+  margin-right: 0.25rem;
+  margin-bottom: 0.25rem;
+}
+
+/* Table row hover effect using Bootstrap colors */
+.table-hover tbody tr:hover {
+  background-color: rgba(var(--bs-warning-rgb), 0.1);
+}
+
+/* Custom urgency table row backgrounds */
+.table tbody tr.table-warning {
+  background-color: rgba(var(--bs-warning-rgb), 0.15);
+}
+
+.table tbody tr.table-danger {
+  background-color: rgba(var(--bs-danger-rgb), 0.15);
+}
+
+/* Modal styling enhancements */
+.modal-content {
+  border-radius: 12px;
+  border: none;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+  border-radius: 12px 12px 0 0;
+}
+
+.modal-footer {
+  border-top: 1px solid #dee2e6;
+  background-color: #f8f9fa;
+  border-radius: 0 0 12px 12px;
+}
+
+/* Button group styling */
+.btn-group .btn {
+  border-radius: 0;
+}
+
+.btn-group .btn:first-child {
+  border-radius: 0.375rem 0 0 0.375rem;
+}
+
+.btn-group .btn:last-child {
+  border-radius: 0 0.375rem 0.375rem 0;
+}
+
+/* Card hover effects */
+.card {
+  transition: box-shadow 0.2s ease;
+}
+
+.card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive adjustments for mobile */
+@media (max-width: 767.98px) {
+  .small-stat {
+    text-align: center;
+    margin-bottom: 0.5rem;
+  }
+  
+  .btn-group {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .btn-group .btn {
+    border-radius: var(--bs-border-radius) !important;
+    margin-bottom: 0.25rem;
+  }
+  
+  .categories-list {
+    max-width: none;
+  }
+  
+  .pageant-info {
+    text-align: center;
+  }
+  
+  .deadline-info,
+  .location-fee,
+  .actions-column {
+    text-align: center;
+    min-width: auto;
+  }
+  
+  .applications-status .row {
+    flex-direction: column;
+  }
+  
+  .applications-status .col-4 {
+    flex: 1 1 auto;
+    max-width: 100%;
+    margin-bottom: 0.5rem;
+  }
+}
+
+/* Loading spinner animation enhancement */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Custom status badges */
+.badge {
+  font-size: 0.75rem;
+  padding: 0.375rem 0.75rem;
+}
+
+/* Table styling enhancements */
+.table th {
+  border-top: none;
+  font-weight: 600;
+  color: #495057;
+  background-color: #f8f9fa;
+}
+
+.table td {
+  vertical-align: middle;
+}
+
+/* Alert styling */
+.alert {
+  border-radius: 10px;
+  border: none;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Empty state styling */
+.alert.text-center {
+  padding: 3rem 2rem;
+}
+
+/* Loading states */
+.btn[disabled] {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Animation for processing states */
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.processing {
+  animation: pulse 1.5s infinite;
+}
+
+/* Search and filter bar styling */
+.input-group-text {
+  background-color: #f8f9fa;
+  border-color: #ced4da;
+}
+
+/* Tab navigation enhancements */
+.nav-tabs .nav-link {
+  color: #495057;
+  border: 1px solid transparent;
+  margin-right: 2px;
+}
+
+.nav-tabs .nav-link:hover {
+  background-color: #f8f9fa;
+  border-color: #dee2e6;
+}
+
+.nav-tabs .nav-link.active {
+  background-color: #007bff;
+  border-color: #007bff;
+  color: white;
+}
+
+/* Icon spacing */
+.fa-fw {
+  text-align: center;
+  width: 1.25em;
+}
