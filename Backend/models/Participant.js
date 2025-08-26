@@ -1,4 +1,3 @@
-// Backend/models/Participant.js
 const mongoose = require('mongoose');
 
 const ParticipantSchema = new mongoose.Schema({
@@ -77,7 +76,11 @@ const ParticipantSchema = new mongoose.Schema({
     enum: ['registered', 'confirmed', 'withdrawn', 'disqualified'],
     default: 'registered'
   },
-  notes: String,
+  notes: {
+    type: String,
+    default: '',
+    maxlength: 1000
+  },
   paymentStatus: {
     type: String,
     enum: ['pending', 'partial', 'completed', 'failed', 'refunded'],
@@ -116,7 +119,42 @@ const ParticipantSchema = new mongoose.Schema({
   balanceDue: {
     type: Number,
     default: 0
-  }
+  },
+  // Application tracking fields
+  applicationReviewedAt: {
+    type: Date
+  },
+  applicationReviewedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  rejectionReason: {
+    type: String,
+    maxlength: 500
+  },
+  approvalDate: {
+    type: Date
+  },
+  // Communication tracking
+  lastContactDate: {
+    type: Date
+  },
+  communicationNotes: [{
+    date: {
+      type: Date,
+      default: Date.now
+    },
+    type: {
+      type: String,
+      enum: ['email', 'phone', 'message', 'note'],
+      default: 'note'
+    },
+    content: String,
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    }
+  }]
 }, {
   timestamps: true
 });
@@ -129,6 +167,11 @@ ParticipantSchema.index({ stripeSessionId: 1 });
 ParticipantSchema.index({ stripePaymentIntentId: 1 });
 ParticipantSchema.index({ paymentStatus: 1 });
 
+// Index for application management
+ParticipantSchema.index({ status: 1 });
+ParticipantSchema.index({ registrationDate: -1 });
+ParticipantSchema.index({ pageant: 1, status: 1 });
+
 // Virtual for the latest payment
 ParticipantSchema.virtual('latestPayment').get(function() {
   if (this.paymentHistory && this.paymentHistory.length > 0) {
@@ -137,56 +180,56 @@ ParticipantSchema.virtual('latestPayment').get(function() {
   return null;
 });
 
-// Method to add a payment record
-ParticipantSchema.methods.addPayment = function(paymentData) {
-  const {
-    amount,
-    transactionId,
-    method = 'stripe',
-    status = 'completed',
-    stripeSessionId,
-    stripePaymentIntentId,
-    description,
-    metadata = {}
-  } = paymentData;
+// Virtual to check if application is pending
+ParticipantSchema.virtual('isPending').get(function() {
+  return this.status === 'registered';
+});
 
-  const payment = {
-    amount,
-    transactionId,
-    method,
-    status,
-    stripeSessionId,
-    stripePaymentIntentId,
-    description,
-    metadata,
-    date: new Date()
-  };
+// Virtual to check if application is approved
+ParticipantSchema.virtual('isApproved').get(function() {
+  return this.status === 'confirmed';
+});
 
-  this.paymentHistory.push(payment);
-  this.updatePaymentSummary();
-  return payment;
+// Virtual to check if application is rejected
+ParticipantSchema.virtual('isRejected').get(function() {
+  return this.status === 'disqualified';
+});
+
+// Method to approve application
+ParticipantSchema.methods.approve = function(reviewedBy, notes) {
+  this.status = 'confirmed';
+  this.applicationReviewedAt = new Date();
+  this.applicationReviewedBy = reviewedBy;
+  this.approvalDate = new Date();
+  if (notes) {
+    this.notes = notes;
+  }
+  return this.save();
 };
 
-// Method to update payment summary fields
-// ParticipantSchema.methods.updatePaymentSummary = function() {
-//   const completedPayments = this.paymentHistory.filter(p => p.status === 'completed');
-//   const refundedPayments = this.paymentHistory.filter(p => p.status === 'refunded');
-  
-//   this.totalPaid = completedPayments.reduce((sum, p) => sum + p.amount, 0);
-//   this.totalRefunded = refundedPayments.reduce((sum, p) => sum + p.amount, 0);
-  
-//   // Update payment status based on total paid vs payment amount
-//   if (this.totalPaid >= this.paymentAmount) {
-//     this.paymentStatus = 'completed';
-//     this.balanceDue = 0;
-//   } else if (this.totalPaid > 0) {
-//     this.paymentStatus = 'partial';
-//     this.balanceDue = this.paymentAmount - this.totalPaid;
-//   } else {
-//     this.paymentStatus = 'pending';
-//     this.balanceDue = this.paymentAmount;
-//   }
-// };
+// Method to reject application
+ParticipantSchema.methods.reject = function(reviewedBy, reason, notes) {
+  this.status = 'disqualified';
+  this.applicationReviewedAt = new Date();
+  this.applicationReviewedBy = reviewedBy;
+  this.rejectionReason = reason;
+  if (notes) {
+    this.notes = notes;
+  }
+  return this.save();
+};
+
+// Method to add communication note
+ParticipantSchema.methods.addCommunicationNote = function(type, content, createdBy) {
+  this.communicationNotes.push({
+    type,
+    content,
+    createdBy,
+    date: new Date()
+  });
+  this.lastContactDate = new Date();
+  return this.save();
+};
 
 // Method to get payment summary
 ParticipantSchema.methods.getPaymentSummary = function() {
@@ -201,12 +244,62 @@ ParticipantSchema.methods.getPaymentSummary = function() {
   };
 };
 
-// Pre-save middleware to update payment summary
-// ParticipantSchema.pre('save', function(next) {
-//   if (this.isModified('paymentHistory') || this.isModified('paymentAmount')) {
-//     this.updatePaymentSummary();
-//   }
-//   next();
-// });
+// Static method to get application statistics for a pageant
+ParticipantSchema.statics.getApplicationStats = async function(pageantId) {
+  const stats = await this.aggregate([
+    { $match: { pageant: mongoose.Types.ObjectId(pageantId) } },
+    {
+      $group: {
+        _id: '$status',
+        count: { $sum: 1 }
+      }
+    }
+  ]);
+
+  const result = {
+    total: 0,
+    registered: 0,
+    confirmed: 0,
+    withdrawn: 0,
+    disqualified: 0
+  };
+
+  stats.forEach(stat => {
+    result[stat._id] = stat.count;
+    result.total += stat.count;
+  });
+
+  return result;
+};
+
+// Static method to get pending applications count for an organization
+ParticipantSchema.statics.getPendingApplicationsCount = async function(organizationId) {
+  const Pageant = mongoose.model('Pageant');
+  
+  const pageants = await Pageant.find({ organization: organizationId }).select('_id');
+  const pageantIds = pageants.map(p => p._id);
+  
+  return await this.countDocuments({
+    pageant: { $in: pageantIds },
+    status: 'registered'
+  });
+};
+
+// Pre-save middleware to update timestamps and validation
+ParticipantSchema.pre('save', function(next) {
+  // Update review timestamp when status changes
+  if (this.isModified('status') && this.status !== 'registered') {
+    if (!this.applicationReviewedAt) {
+      this.applicationReviewedAt = new Date();
+    }
+  }
+  
+  // Set approval date when approved
+  if (this.isModified('status') && this.status === 'confirmed' && !this.approvalDate) {
+    this.approvalDate = new Date();
+  }
+  
+  next();
+});
 
 module.exports = mongoose.model('Participant', ParticipantSchema);
